@@ -135,6 +135,18 @@ export function App({ onLogin, onBack, onLoginComplete, loginView = false, activ
       ? previous
       : new Set([...previous, id]));
   }, []);
+  // Some embedded webviews never tick requestAnimationFrame inside iframes,
+  // so scene frames can never arrive there. Reveal anyway after a bounded
+  // wait instead of stranding the homepage behind the boot curtain forever;
+  // fast environments still open on real frames.
+  useEffect(() => {
+    if (casesReady) return;
+    const timer = setTimeout(
+      () => setBootedCases(new Set(initialCaseIds.current)),
+      8000,
+    );
+    return () => clearTimeout(timer);
+  }, [casesReady]);
   useEffect(() => {
     const change = () => setVisible(!document.hidden);
     document.addEventListener("visibilitychange", change);

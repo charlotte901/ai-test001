@@ -14,6 +14,24 @@
   border-radius: calc(34px * var(--flat-progress, 0));
   filter: drop-shadow(0 calc(16px * var(--flat-progress, 0)) calc(18px * var(--flat-progress, 0)) #7a16472b);
 }
+/* WebGL shell: one continuous mesh, shared edges, antialiased. Same design
+ * pixel space as the reference background; visibility follows the photo shell
+ * cross-fade. The rounded silhouette comes from the textures' own alpha. */
+.cube-webgl {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1514px;
+  height: 1006px;
+  transform-origin: 0 0;
+  pointer-events: none;
+  opacity: var(--texture-opacity, 0);
+}
+.cube-display[data-flat="true"] .cube-webgl {
+  filter: drop-shadow(0 16px 18px #7a16472b);
+}
+.cube-display[data-shell="webgl"] .cube-frame-face { display: none; }
+.cube-display[data-shell="dom"] .cube-webgl { display: none; }
 .cube-shell,
 .cube-shadow {
   opacity: var(--shell-opacity, 1);

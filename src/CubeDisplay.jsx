@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CaseScreen } from "./CaseScreen";
 import { FACE_CORNERS, projectPlane, getCubeGeometry, CUBE_TURN_DURATION } from "./cube-geometry";
+import { faceVisible, screenQuad } from "./cube3d";
 import { loadCubeTextures, TEXTURE_SIZE } from "./cube-textures";
 import {
   ArrowClockwise,
@@ -261,6 +262,8 @@ export function CubeDisplay({ faces, nextFaces, flattened = false, active = true
   const [ready, setReady] = useState(false);
   const [settled, setSettled] = useState(flattened);
   const [turning, setTurning] = useState(false);
+  const webgl = useRef(null);
+  const [shell, setShell] = useState("dom");
   const blankFaces = flattened || turning;
   const showLogin = flattened && settled && ready && !turning && Boolean(loginContent);
   useEffect(() => {
@@ -273,6 +276,37 @@ export function CubeDisplay({ faces, nextFaces, flattened = false, active = true
       setReady(true);
     }).catch(() => setReady(false));
     return () => { cancelled = true; };
+  }, []);
+  // The WebGL shell replaces the three separately warped DOM quads whose
+  // seams tore mid-turn. Own canvas lifecycle so StrictMode remounts stay clean.
+  useEffect(() => {
+    let cancelled = false;
+    let api = null;
+    Promise.all([import("./cube-scene"), loadCubeTextures()])
+      .then(([{ createCubeScene }, textures]) => {
+        if (cancelled || !root.current) return;
+        const canvas = document.createElement("canvas");
+        canvas.className = "cube-webgl";
+        canvas.setAttribute("aria-hidden", "true");
+        root.current.insertBefore(canvas, root.current.querySelector(".cube-frame-face"));
+        try {
+          api = createCubeScene(canvas, textures);
+        } catch (error) {
+          canvas.remove();
+          throw error;
+        }
+        webgl.current = api;
+        setShell("webgl");
+        api.setProgress(progress.current);
+      })
+      .catch(() => {
+        // No WebGL (or scene failure): the DOM projection path stays in charge.
+      });
+    return () => {
+      cancelled = true;
+      api?.dispose();
+      webgl.current = null;
+    };
   }, []);
 
   useEffect(() => {
@@ -298,6 +332,19 @@ export function CubeDisplay({ faces, nextFaces, flattened = false, active = true
       node.style.setProperty("--shell-opacity", 1 - shellBlend);
       node.style.setProperty("--texture-opacity", shellBlend);
       node.style.setProperty("--flat-progress", p);
+      if (webgl.current) {
+        // Shell and screens share one projection, so edges cannot tear.
+        webgl.current.setProgress(p);
+        for (const key of Object.keys(FACE_CORNERS)) {
+          const plane = surfaces[key].screen;
+          const visible = faceVisible(key, p);
+          plane.style.visibility = visible ? "visible" : "hidden";
+          if (!visible) continue;
+          const quad = screenQuad(key, p);
+          plane.style.transform = projectPlane(quad, Number(plane.dataset.width), Number(plane.dataset.height));
+        }
+        return;
+      }
       const geometry = getCubeGeometry(p);
       for (const [key, face] of Object.entries(geometry)) {
         const { texture, screen } = surfaces[key];
@@ -325,6 +372,7 @@ export function CubeDisplay({ faces, nextFaces, flattened = false, active = true
 
   return (
     <div className="cube-display" ref={root} data-flat={settled} data-blank={blankFaces}
+      data-shell={shell}
       role="group" aria-label={flattened ? "浅粉色正面屏幕" : "三面立方体显示器"}>
       <div className="cube-shadow" aria-hidden="true" />
       <img
