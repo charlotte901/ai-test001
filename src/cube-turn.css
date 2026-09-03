@@ -1,0 +1,77 @@
+/* The rotating surfaces use the original shell as their material maps. */
+.cube-frame-face {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 640px;
+  height: 640px;
+  transform-origin: 0 0;
+  pointer-events: none;
+  opacity: var(--texture-opacity, 0);
+  backface-visibility: hidden;
+}
+.cube-frame-face.right {
+  border-radius: calc(34px * var(--flat-progress, 0));
+  filter: drop-shadow(0 calc(16px * var(--flat-progress, 0)) calc(18px * var(--flat-progress, 0)) #7a16472b);
+}
+.cube-shell,
+.cube-shadow {
+  opacity: var(--shell-opacity, 1);
+}
+.cube-position {
+  transition: transform 900ms cubic-bezier(.333333, 1, .666667, 1);
+  will-change: transform;
+}
+.home-hero-art,
+.intro-copy,
+.site-header nav,
+.case-carousel,
+.next-slide {
+  transition: opacity 180ms ease, visibility 180ms;
+}
+.app.is-login-view .cube-position {
+  transform: translate(var(--flat-x), var(--flat-y)) scale(var(--flat-scale));
+}
+.app.is-login-view .home-hero-art,
+.app.is-login-view .intro-copy,
+.app.is-login-view .site-header nav,
+.app.is-login-view .case-carousel,
+.app.is-login-view .next-slide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.app.is-login-view .canvas-space {
+  height: max(420px, 100dvh);
+}
+.app.is-login-view .get-started {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.cube-display[data-flat="true"] .screen-plane.right {
+  outline: none;
+}
+.cube-display[data-blank="true"] .screen-plane {
+  background: #fbe1ec;
+  box-shadow: inset 0 0 0 1px #fff4;
+}
+.cube-display[data-blank="true"] .screen-plane > * {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.cube-display[data-blank="true"] .screen-plane:after {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cube-position,
+  .home-hero-art,
+  .intro-copy,
+  .site-header nav,
+  .case-carousel,
+  .next-slide {
+    transition: none;
+  }
+}

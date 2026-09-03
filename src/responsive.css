@@ -1,0 +1,246 @@
+/* Viewport layout. Visual styling and screen content remain in styles.css. */
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+body {
+  min-width: 280px;
+}
+.app {
+  display: block;
+  width: 100%;
+  min-height: 100dvh;
+  overflow: clip;
+}
+.canvas-space {
+  width: 100%;
+  height: var(--page-height);
+}
+.design-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+.pink-frame {
+  inset: 8px var(--edge) 10px;
+  width: calc(100% - var(--edge) * 2);
+  height: calc(100% - 18px);
+}
+.site-header {
+  left: calc(54px * var(--ui-scale));
+  right: calc(41px * var(--ui-scale));
+  top: calc(31px * var(--ui-scale));
+  height: calc(51px * var(--ui-scale));
+}
+.home-brand {
+  transform: scale(var(--ui-scale));
+  transform-origin: left center;
+}
+.site-header nav {
+  left: 50%;
+  top: 0;
+  height: 51px;
+  transform: translateX(-50%) scale(var(--ui-scale));
+  transform-origin: top center;
+}
+.get-started {
+  transform: scale(var(--ui-scale));
+  transform-origin: right center;
+}
+.get-started:hover {
+  transform: scale(var(--ui-scale)) translateY(-2px);
+}
+.brand-display {
+  transform: translate(var(--brand-x), var(--brand-y)) scale(var(--brand-scale));
+  transform-origin: top left;
+}
+.cube-position {
+  inset: auto;
+  left: 0;
+  top: 0;
+  width: 1536px;
+  height: 1024px;
+  transform: translate(var(--cube-x), var(--cube-y)) scale(var(--cube-scale));
+  transform-origin: top left;
+}
+.intro-copy {
+  left: var(--intro-left);
+  top: var(--intro-top);
+  transform: scale(var(--ui-scale));
+  transform-origin: top left;
+}
+.color-switches {
+  right: max(25px, 3%);
+  top: 45.7%;
+  transform: scale(var(--ui-scale));
+  transform-origin: top right;
+}
+.carousel-dots {
+  top: var(--dots-top);
+  left: var(--dots-left);
+  transform: scale(var(--ui-scale));
+  transform-origin: top left;
+}
+.next-slide {
+  right: max(25px, 3.255%);
+  top: auto;
+  bottom: 13%;
+  transform: scale(var(--ui-scale));
+  transform-origin: bottom right;
+}
+.next-slide:hover {
+  transform: scale(var(--ui-scale)) translateX(4px);
+}
+.stats {
+  top: auto;
+  left: 50%;
+  bottom: calc(23px * var(--ui-scale));
+  width: 842px;
+  height: 92px;
+  transform: translateX(-50%) scale(var(--ui-scale));
+  transform-origin: bottom center;
+}
+.preset-notice {
+  bottom: max(18px, env(safe-area-inset-bottom));
+}
+
+.app[data-layout="compact"] .site-header {
+  left: 25px;
+  right: 25px;
+  top: max(22px, env(safe-area-inset-top));
+  height: 40px;
+}
+.app[data-layout="compact"] .home-brand {
+  transform: scale(0.78);
+}
+.app[data-layout="compact"] .get-started {
+  height: 40px;
+  width: 118px;
+  font-size: 13px;
+  padding: 0 15px;
+}
+.app[data-layout="compact"] .site-header nav {
+  left: 0;
+  top: 48px;
+  height: 30px;
+  transform: none;
+  gap: clamp(22px, 6vw, 42px);
+  font-size: 13px;
+}
+.app[data-layout="compact"] .intro-copy h2 {
+  font-size: 30px;
+  line-height: 1.02;
+  letter-spacing: -1px;
+  margin-bottom: 13px;
+}
+.app[data-layout="compact"] .intro-copy > p {
+  font-size: 15px;
+  line-height: 1.3;
+  margin-bottom: 17px;
+}
+.app[data-layout="compact"] .explore {
+  height: 42px;
+  width: 164px;
+  font-size: 14px;
+}
+.app[data-layout="compact"] .social-proof {
+  margin-top: 17px;
+  gap: 9px;
+}
+.app[data-layout="compact"] .social-proof p {
+  font-size: 11px;
+  line-height: 1.35;
+}
+.app[data-layout="compact"] .social-proof .star-badge {
+  width: 30px;
+  height: 30px;
+}
+.app[data-layout="compact"] .social-proof .star-badge svg {
+  width: 16px;
+  height: 16px;
+}
+.app[data-layout="compact"] .color-switches {
+  top: calc(var(--intro-top) + 16px);
+  right: 25px;
+  gap: 5px;
+}
+.app[data-layout="compact"] .color-switches .star-badge {
+  width: 36px;
+  height: 36px;
+}
+.app[data-layout="compact"] .color-switches button {
+  padding: 3px;
+}
+.app[data-layout="compact"] .next-slide {
+  top: calc(var(--intro-top) + 192px);
+  bottom: auto;
+  right: 28px;
+  width: 48px;
+  height: 48px;
+}
+.app[data-layout="compact"] .carousel-dots {
+  gap: 3px;
+}
+.app[data-layout="compact"] .carousel-dots button {
+  width: 18px;
+  height: 24px;
+}
+.app[data-layout="compact"] .carousel-dots button:after {
+  width: 9px;
+  height: 9px;
+}
+.app[data-layout="compact"] .mobile-hint {
+  display: block;
+  position: absolute;
+  top: var(--hint-top);
+  left: 0;
+  width: 100%;
+  margin: 0;
+  text-align: center;
+  font-size: 10px;
+  opacity: 0.8;
+}
+.app[data-layout="compact"] .stats {
+  width: var(--stats-width);
+  height: 70px;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  border-radius: 14px;
+  grid-template-columns: repeat(3, 1fr);
+}
+.app[data-layout="compact"] .stat {
+  justify-content: center;
+  padding: 6px 3px;
+  gap: 3px;
+  flex-direction: column;
+}
+.app[data-layout="compact"] .stat + .stat {
+  border-left-width: 1px;
+}
+.app[data-layout="compact"] .stat-icon {
+  width: 23px;
+  height: 23px;
+  border-radius: 7px;
+}
+.app[data-layout="compact"] .stat-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.app[data-layout="compact"] .stat p {
+  text-align: center;
+  gap: 0;
+}
+.app[data-layout="compact"] .stat strong {
+  font-size: 19px;
+}
+.app[data-layout="compact"] .stat p > span {
+  font-size: 9px;
+}
+.app[data-layout="compact"] .screen-edit-button {
+  opacity: 1;
+}
+.app[data-layout="compact"] .screen-hit-area span {
+  display: none;
+}

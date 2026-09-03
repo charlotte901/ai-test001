@@ -1,0 +1,389 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowUpRight,
+  ArrowLeft,
+  CaretRight,
+  Pause,
+  X,
+  Play,
+} from "@phosphor-icons/react";
+import { Brand } from "./Brand";
+import { CubeDisplay } from "./CubeDisplay";
+import { LoginForm } from "./LoginForm";
+import { getFlatLayout, getLoginScreenSize } from "./cube-geometry";
+import { getViewportLayout } from "./layout";
+import {
+  CASES,
+  CASE_INTERVAL,
+  getCaseFaces,
+  normalizeCaseIndex,
+} from "./cases";
+
+
+function ReferenceBackground() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const source = new Image();
+    source.src = "/assets/aiquos-reference.png";
+    source.onload = () => {
+      const ctx = ref.current?.getContext("2d");
+      if (!ctx) return;
+      const tile = document.createElement("canvas");
+      tile.width = 128;
+      tile.height = 128;
+      tile
+        .getContext("2d")
+        .drawImage(source, 1220, 630, 128, 128, 0, 0, 128, 128);
+      // Keep only the supplied fine grain, not its low-frequency lighting.
+      // This avoids visible repeating patches on the responsive background.
+      const tileContext = tile.getContext("2d");
+      const pixels = tileContext.getImageData(0, 0, 128, 128);
+      const original = new Uint8ClampedArray(pixels.data);
+      for (let i = 0; i < pixels.data.length; i += 4) {
+        const previous = i >= 4 ? i - 4 : i;
+        const grain = (original[i + 1] - original[previous + 1]) * 0.25;
+        pixels.data[i] = 245 + grain;
+        pixels.data[i + 1] = 107 + grain;
+        pixels.data[i + 2] = 163 + grain;
+      }
+      tileContext.putImageData(pixels, 0, 0);
+      ctx.fillStyle = ctx.createPattern(tile, "repeat");
+      ctx.fillRect(0, 0, 1514, 1006);
+    };
+    return () => {
+      source.onload = null;
+    };
+  }, []);
+  return (
+    <canvas
+      ref={ref}
+      className="pink-frame"
+      width="1514"
+      height="1006"
+      aria-hidden="true"
+    />
+  );
+}
+
+function Modal({ children, title, subtitle, onClose, className = "" }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const previous = document.activeElement;
+    const dialog = ref.current;
+    dialog.showModal();
+    const close = (e) => {
+      e.preventDefault();
+      onClose();
+    };
+    dialog.addEventListener("cancel", close);
+    return () => {
+      dialog.removeEventListener("cancel", close);
+      dialog.close();
+      previous?.focus();
+    };
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      className={`dialog ${className}`}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      aria-labelledby="dialog-title"
+    >
+      <div className="dialog-content">
+        <header className="dialog-header">
+          <div>
+            <p className="eyebrow">AIQUOS / PLAYGROUND</p>
+            <h2 id="dialog-title">{title}</h2>
+            <p>{subtitle}</p>
+          </div>
+          <button
+            className="icon-button close-button"
+            onClick={onClose}
+            aria-label="关闭"
+          >
+            <X size={22} />
+          </button>
+        </header>
+        {children}
+      </div>
+    </dialog>
+  );
+}
+
+
+export function App({ onLogin, onBack, onLoginComplete, loginView = false, active = true, transitionBusy = false, onCubeMotionChange }) {
+  const [size, setSize] = useState({
+    width: document.documentElement.clientWidth,
+    height: window.innerHeight,
+  });
+  const [faces, setFaces] = useState(() => getCaseFaces(0));
+  const [preset, setPreset] = useState(0);
+  const nextFaces = useMemo(() => getCaseFaces(preset + 1), [preset]);
+  const [playing, setPlaying] = useState(
+    () => !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+  const [visible, setVisible] = useState(() => !document.hidden);
+  const [modal, setModal] = useState(null);
+  useEffect(() => {
+    const change = () => setVisible(!document.hidden);
+    document.addEventListener("visibilitychange", change);
+    return () => document.removeEventListener("visibilitychange", change);
+  }, []);
+  useEffect(() => {
+    if (
+      !active ||
+      loginView ||
+      transitionBusy ||
+      !playing ||
+      !visible ||
+      modal ||
+      preset < 0
+    )
+      return;
+    const timer = setTimeout(() => {
+      const next = normalizeCaseIndex(preset + 1);
+      setPreset(next);
+      setFaces(getCaseFaces(next));
+    }, CASE_INTERVAL);
+    return () => clearTimeout(timer);
+  }, [active, loginView, transitionBusy, playing, visible, modal, preset]);
+  useEffect(() => {
+    const resize = () => {
+      const next = {
+        width: document.documentElement.clientWidth,
+        height: window.innerHeight,
+      };
+      setSize((previous) =>
+        previous.width === next.width && previous.height === next.height
+          ? previous
+          : next,
+      );
+    };
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(document.body);
+    window.addEventListener("resize", resize);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+  const layout = getViewportLayout(size.width, size.height);
+  const flat = getFlatLayout(size.width, size.height);
+  const loginScreenSize = getLoginScreenSize(size.width, size.height);
+  function choosePreset(index) {
+    const next = normalizeCaseIndex(index);
+    setPreset(next);
+    setFaces(getCaseFaces(next));
+  }
+  function reset() {
+    choosePreset(0);
+    setPlaying(true);
+    setModal(null);
+  }
+  return (
+    <main
+      className={`app ${loginView ? "is-login-view" : ""}`}
+      data-layout={layout.compact ? "compact" : "wide"}
+      style={{ ...layout.variables, "--flat-x": `${flat.x}px`, "--flat-y": `${flat.y}px`, "--flat-scale": flat.scale }}
+    >
+      <div className="canvas-space">
+        <section
+          className="design-canvas"
+          aria-label="AIQUOS creative learning playground"
+        >
+          <ReferenceBackground />
+          <header className="site-header">
+            <a
+              href="#home"
+              className="home-brand"
+              aria-label="AIQUOS 首页"
+              onClick={(e) => {
+                e.preventDefault();
+                if (loginView) onBack();
+                else reset();
+              }}
+            >
+              <Brand compact />
+            </a>
+            <nav aria-label="Main navigation" inert={loginView} aria-hidden={loginView}>
+              <a
+                className={!modal ? "active" : ""}
+                href="#home"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setModal(null);
+                }}
+              >
+                Home
+              </a>
+              <a
+                href="#features"
+                onClick={(e) => {
+                  e.preventDefault();
+                  reset();
+                }}
+              >
+                Features
+              </a>
+              <a
+                href="#about"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setModal("about");
+                }}
+              >
+                About
+              </a>
+              <a
+                href="#pricing"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setModal("pricing");
+                }}
+              >
+                Pricing
+              </a>
+            </nav>
+            <button
+              className="pill-button get-started"
+              onClick={loginView ? onBack : onLogin}
+              disabled={transitionBusy}
+              aria-label={loginView ? "返回首页" : "登录，旋转立方体"}
+            >
+              {loginView ? <><ArrowLeft size={18} /> 返回首页</> : "登录"}
+            </button>
+          </header>
+          <div className="home-hero-art" aria-hidden={loginView}><Brand /></div>
+          <div className="intro-copy" inert={loginView} aria-hidden={loginView}>
+            <h2>
+              AI 时代，
+              <br />
+              你的实力
+              <br />
+              到哪一步？
+            </h2>
+            <p>
+              用真实任务，检验你的 AI 能力。
+              <br />
+              从精准提问，到把想法变成作品。
+            </p>
+            <button
+              className="pill-button explore"
+              onClick={() => {
+                choosePreset(0);
+                setPlaying(true);
+              }}
+            >
+              探索案例
+              <ArrowUpRight size={24} weight="bold" />
+            </button>
+          </div>
+          <div className="cube-position">
+            <CubeDisplay faces={faces} nextFaces={nextFaces} flattened={loginView}
+              active={active && visible} onMotionChange={onCubeMotionChange}
+              loginScreenSize={loginScreenSize}
+              loginContent={<LoginForm onLogin={onLoginComplete} />} />
+          </div>
+          <section className="case-carousel" aria-label="案例轮播" inert={loginView} aria-hidden={loginView}>
+            <div className="case-carousel-controls">
+              <div className="carousel-dots" aria-label="选择案例">
+                {CASES.map((item, i) => (
+                  <button
+                    key={item.id}
+                    aria-label={`展示${item.name}`}
+                    title={item.name}
+                    aria-pressed={preset === i}
+                    className={preset === i ? "selected" : ""}
+                    onClick={() => choosePreset(i)}
+                  />
+                ))}
+              </div>
+              <button
+                className="carousel-toggle"
+                aria-label={
+                  playing && preset >= 0 ? "暂停案例轮播" : "继续案例轮播"
+                }
+                onClick={() => {
+                  if (preset < 0) {
+                    choosePreset(0);
+                    setPlaying(true);
+                  } else setPlaying(!playing);
+                }}
+              >
+                {playing && preset >= 0 ? (
+                  <Pause weight="fill" />
+                ) : (
+                  <Play weight="fill" />
+                )}
+              </button>
+            </div>
+            <p className="case-current">
+              <span>
+                {preset >= 0
+                  ? `${String(preset + 1).padStart(2, "0")} / ${String(CASES.length).padStart(2, "0")}`
+                  : "CUSTOM"}
+              </span>
+              <strong>{preset >= 0 ? CASES[preset].name : "自定义屏幕"}</strong>
+            </p>
+            <p className="case-playback-state">
+              {preset < 0
+                ? "已保留你的内容 · 点击播放恢复案例"
+                : playing
+                  ? "每 15 秒切换 · 三面联播"
+                  : "轮播已暂停 · 案例继续播放"}
+            </p>
+          </section>
+          <button
+            className="next-slide"
+            inert={loginView}
+            aria-hidden={loginView}
+            aria-label="下一组屏幕内容"
+            onClick={() => choosePreset(preset + 1)}
+          >
+            <CaretRight size={34} weight="bold" />
+          </button>
+        </section>
+      </div>
+      {modal === "about" && (
+        <Modal
+          title="Learn. Create. Achieve."
+          subtitle="一个立方体，装下无限灵感。"
+          onClose={() => setModal(null)}
+        >
+          <div className="info-body">
+            <p>AIQUOS 将学习、创作与专注，放在触手可及的三个屏幕上。</p>
+            <p>
+              在真实案例中观察 AI 的创作能力，并探索如何把想法变成作品。登录入口提供免验证的表单演示，可进入测评方式选择页；真实账号与评分尚未接入。
+            </p>
+            <button className="done-button" onClick={reset}>
+              开始探索
+              <ArrowUpRight />
+            </button>
+          </div>
+        </Modal>
+      )}
+      {modal === "pricing" && (
+        <Modal
+          title="A little more possibility."
+          subtitle="先把灵感放上屏幕。"
+          onClose={() => setModal(null)}
+        >
+          <div className="info-body">
+            <span className="demo-label">INTERACTIVE DEMO</span>
+            <h3>自由探索，不设门槛。</h3>
+            <p>
+              当前是前端交互演示，可以浏览真实案例和体验立方体转场。没有真实付费套餐，也不会收取任何费用。
+            </p>
+            <button className="done-button" onClick={reset}>
+              Try the playground
+              <ArrowUpRight />
+            </button>
+          </div>
+        </Modal>
+      )}
+    </main>
+  );
+}

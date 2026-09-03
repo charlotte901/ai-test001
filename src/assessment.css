@@ -1,0 +1,197 @@
+.experience-panel[hidden] {
+  display: none;
+}
+.assessment-screen {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #08080a;
+  color: #fff;
+}
+.assessment-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: calc(122px * var(--assessment-unit));
+  padding-bottom: 60px;
+}
+.assessment-wordmark {
+  margin: 0;
+  width: calc(633.344px * var(--assessment-unit));
+  height: calc(188px * var(--assessment-unit));
+  outline: none;
+}
+.assessment-wordmark canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.assessment-grid {
+  display: grid;
+  grid-template-columns: 363fr 21fr 355fr 21fr 357fr 22fr 363fr;
+  gap: 0;
+  width: calc(1502px * var(--assessment-unit));
+  max-width: calc(100% - 40px);
+  margin-top: calc(33px * var(--assessment-unit));
+  transform: translateX(calc(-4px * var(--assessment-unit)));
+}
+.assessment-card:nth-child(2) {
+  grid-column: 3;
+}
+.assessment-card:nth-child(3) {
+  grid-column: 5;
+}
+.assessment-card:nth-child(4) {
+  grid-column: 7;
+}
+.assessment-card {
+  position: relative;
+  display: block;
+  padding: 0;
+  background: none;
+  border-radius: calc(22px * var(--assessment-unit));
+  overflow: hidden;
+  min-width: 0;
+  transition:
+    transform 240ms ease,
+    box-shadow 240ms ease;
+}
+.assessment-card .source-crop {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.source-crop {
+  position: relative;
+  overflow: hidden;
+}
+.source-crop img {
+  position: absolute;
+  max-width: none;
+  display: block;
+}
+.assessment-card:hover {
+  transform: translateY(-7px);
+  filter: none;
+  box-shadow: 0 18px 40px #0006;
+}
+.assessment-card:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 6px;
+}
+.assessment-card[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px #fff9;
+}
+.assessment-card:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.assessment-check {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #0005;
+  backdrop-filter: blur(10px);
+}
+.assessment-selection {
+  min-height: 20px;
+  margin: 30px 0 0;
+  font-size: 13px;
+  color: #ffffffa6;
+}
+.assessment-back {
+  position: absolute;
+  top: 28px;
+  left: 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px;
+  font-size: 12px;
+  color: #ffffff7a;
+  background: transparent;
+  z-index: 2;
+}
+.assessment-back:hover {
+  color: white;
+}
+.assessment-screen[data-compact="true"] .assessment-layout {
+  padding: 106px 24px 36px;
+}
+.assessment-screen[data-compact="true"] .assessment-wordmark {
+  width: min(76vw, 420px);
+  height: auto;
+  aspect-ratio: 822 / 244;
+  transform: none;
+}
+.assessment-screen[data-compact="true"] .assessment-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  max-width: none;
+  gap: 16px;
+  margin-top: 32px;
+  transform: none;
+}
+.assessment-screen[data-compact="true"] .assessment-card {
+  border-radius: 12px;
+  grid-column: auto;
+}
+.assessment-screen[data-compact="true"] .assessment-back {
+  left: 19px;
+  top: 23px;
+}
+.assessment-screen[data-compact="true"] .assessment-check {
+  width: 25px;
+  height: 25px;
+  top: 10px;
+  right: 10px;
+}
+.split-transition {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow: hidden;
+  background: #08090a;
+  pointer-events: auto;
+}
+.split-transition.is-running {
+  display: block;
+}
+.transition-strip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  will-change: transform;
+  background: #08090a;
+}
+.transition-strip .experience-panel {
+  height: auto;
+  min-height: 100%;
+  transform-origin: top left;
+}
+.transition-strip * {
+  animation: none !important;
+  transition: none !important;
+  cursor: default !important;
+}
+.transition-strip button:disabled {
+  opacity: 1;
+}
+.transition-strip button:hover {
+  filter: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .assessment-card {
+    transition: none;
+  }
+  .assessment-card:hover {
+    transform: none;
+  }
+}

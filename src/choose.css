@@ -1,0 +1,70 @@
+.choose-screen {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #08080a;
+  color: #fff;
+}
+.choose-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: calc(83px * var(--choose-unit) + max(0px, (100dvh - 863px * var(--choose-unit)) / 2));
+  padding-bottom: calc(18px * var(--choose-unit));
+}
+.choose-wordmark {
+  width: calc(837px * var(--choose-unit));
+  height: calc(175px * var(--choose-unit));
+  margin: 0;
+  transform: translateX(calc(9.5px * var(--choose-unit)));
+  outline: none;
+}
+.choose-wordmark canvas { display: block; width: 100%; height: 100%; }
+.choose-grid {
+  display: grid;
+  grid-template-columns: 426fr 38fr 425fr 34fr 425fr;
+  width: calc(1348px * var(--choose-unit));
+  max-width: calc(100% - 48px);
+  margin-top: calc(45px * var(--choose-unit));
+  transform: translateX(calc(6px * var(--choose-unit)));
+}
+.choose-card {
+  position: relative;
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border-radius: calc(36px * var(--choose-unit));
+  background: none;
+  overflow: hidden;
+  transition: transform 240ms ease, box-shadow 240ms ease;
+}
+.choose-card:nth-child(2) { grid-column: 3; }
+.choose-card:nth-child(3) { grid-column: 5; }
+.choose-card .source-crop { display: block; width: 100%; }
+.choose-card:hover { transform: translateY(-7px); filter: none; box-shadow: 0 18px 40px #0006; }
+.choose-card:focus-visible { outline: 2px solid white; outline-offset: 6px; }
+.choose-card[aria-pressed="true"] { box-shadow: 0 0 0 2px #fff9; }
+.choose-card:disabled { opacity: 1; cursor: default; }
+.choose-selection { min-height: 18px; margin: 18px 24px 0; font-size: 12px; color: #ffffffa6; text-align: center; }
+.choose-screen[data-compact="true"] .choose-layout { padding: 96px 24px 24px; }
+.choose-screen[data-compact="true"] .choose-wordmark { width: min(84vw, 460px); height: auto; aspect-ratio: 837 / 175; transform: none; }
+.choose-screen[data-compact="true"] .choose-grid { width: 100%; max-width: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 32px; transform: none; }
+.choose-screen[data-compact="true"] .choose-card { grid-column: auto; border-radius: 16px; }
+.choose-screen[data-compact="true"] .choose-card:last-child { grid-column: 1 / -1; width: calc((100% - 16px) / 2); justify-self: center; }
+.choose-screen[data-compact="true"] .assessment-back { left: 19px; top: 23px; }
+.card-flight-layer { position: absolute; inset: 0; pointer-events: none; }
+.card-flight-layer .experience-panel,
+.card-flight-layer .choose-screen,
+.card-flight-layer .assessment-screen { background: transparent !important; overflow: visible; }
+.card-flight-layer .assessment-back,
+.card-flight-layer .assessment-selection,
+.card-flight-layer .choose-selection { visibility: hidden; }
+.card-flight-layer * { transition: none !important; animation: none !important; }
+.card-flight-layer button:hover { transform: none; box-shadow: none; }
+.card-flight-layer .choose-card,
+.card-flight-layer .assessment-card { will-change: transform, opacity; }
+@media (prefers-reduced-motion: reduce) {
+  .choose-card { transition: none; }
+  .choose-card:hover { transform: none; }
+}
