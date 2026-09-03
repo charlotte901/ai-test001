@@ -10,6 +10,9 @@ export const PROFILE_CARDS = [
 ];
 
 export function getProfileLayout(width, height) {
-  const unit = Math.min(width / 1672, Math.max(height, 560) / 941);
+  // TEST's shared unit, scaled down for the five-across row: five cards on
+  // the 1502 span read crowded at laptop widths, so the whole page keeps its
+  // internal rhythm at 88%.
+  const unit = 0.88 * Math.min(width / 1672, Math.max(height, 560) / 941);
   return { compact: width < 760, variables: { "--profile-unit": unit } };
 }

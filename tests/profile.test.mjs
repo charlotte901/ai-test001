@@ -30,7 +30,8 @@ test("five personal-center cards keep source-bounded crops and unchanged copy", 
 });
 
 test("profile shares the TEST design system and two-columns on phones", () => {
-  assert.equal(getProfileLayout(1672, 941).variables["--profile-unit"], 1);
+  const full = getProfileLayout(1672, 941).variables["--profile-unit"];
+  assert.ok(Math.abs(full - 0.88) < 1e-10); // five-across relief factor
   for (const [width, height] of [
     [320, 568],
     [390, 844],
@@ -40,7 +41,7 @@ test("profile shares the TEST design system and two-columns on phones", () => {
   ]) {
     const layout = getProfileLayout(width, height);
     assert.ok(layout.variables["--profile-unit"] > 0);
-    assert.ok(layout.variables["--profile-unit"] <= width / 1672 + 1e-10);
+    assert.ok(layout.variables["--profile-unit"] <= (width / 1672) * 0.88 + 1e-10);
     assert.equal(layout.compact, width < 760);
   }
 });
