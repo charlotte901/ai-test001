@@ -2,7 +2,7 @@ const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 // Optical correction: the hero wordmark reads a touch left of center next to
 // the header logo, so nudge it right in design pixels (scaled with the art).
-const BRAND_SHIFT_X = 30;
+const BRAND_SHIFT_X = 48;
 
 /** Layout the individual elements in the viewport, never scale the whole page.
  * Artwork uses uniform scales so the wordmark and screen homographies stay true.
