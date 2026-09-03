@@ -47,10 +47,15 @@
 .choose-card[aria-pressed="true"] { box-shadow: 0 0 0 2px #fff9; }
 .choose-card:disabled { opacity: 1; cursor: default; }
 .choose-selection { min-height: 18px; margin: 18px 24px 0; font-size: 12px; color: #ffffffa6; text-align: center; }
-.choose-screen[data-compact="true"] .choose-layout { padding: 96px 24px 24px; }
-.choose-screen[data-compact="true"] .choose-wordmark { width: min(84vw, 460px); height: auto; aspect-ratio: 837 / 175; transform: none; }
+/* Compact values mirror .assessment-screen[data-compact]; the extra top
+   padding offsets the flatter CHOOSE! wordmark (837/175 vs 822/244) so both
+   pages start their card rows on the same line. */
+.choose-screen[data-compact="true"] .choose-layout {
+  padding: calc(106px + 0.0877 * min(76vw, 420px)) 24px 36px;
+}
+.choose-screen[data-compact="true"] .choose-wordmark { width: min(76vw, 420px); height: auto; aspect-ratio: 837 / 175; transform: none; }
 .choose-screen[data-compact="true"] .choose-grid { width: 100%; max-width: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 32px; transform: none; }
-.choose-screen[data-compact="true"] .choose-card { grid-column: auto; border-radius: 16px; }
+.choose-screen[data-compact="true"] .choose-card { grid-column: auto; border-radius: 12px; }
 .choose-screen[data-compact="true"] .choose-card:last-child { grid-column: 1 / -1; width: calc((100% - 16px) / 2); justify-self: center; }
 .choose-screen[data-compact="true"] .assessment-back { left: 19px; top: 23px; }
 .choose-screen[data-compact="true"] .assessment-check { width: 25px; height: 25px; top: 10px; right: 10px; }
