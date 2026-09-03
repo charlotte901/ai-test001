@@ -24,7 +24,8 @@
   pointer-events: none;
 }
 .case-layer > video {
-  object-fit: contain;
+  /* The display itself is the crop: branded screens must never letterbox. */
+  object-fit: cover;
 }
 .case-caption {
   position: absolute;

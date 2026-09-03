@@ -2,6 +2,50 @@
 
 final result: passed
 
+## Latest revision: five-stage assessment map and task surfaces
+
+Source visual truth: the user-selected task-screen mock at `/var/folders/xd/w7bm0l8j6dlf_y7pgh5s1qsr0000gn/T/codex-clipboard-ea2b09ba-0e25-4eaf-bcce-7a71a1f7f5a6.png` (1672 × 941). Its governing anatomy is the pure category-color field, local white TEST! artwork in the upper left, five-node progress trail in the upper right, a single white rounded work surface, and two small IP guides peeking over that surface.
+
+Implementation evidence: local route `#assessment/conversation/level/3`; in-app browser capture `/private/tmp/aiquos-assessment-mobile-final.jpg` (312 × 610 CSS pixels at the current narrow browser surface). The reference and an earlier normalized implementation capture were placed in one comparison image at `/private/tmp/aiquos-assessment-comparison.png`. The in-app browser could not maintain a larger requested viewport and reset to the active narrow surface, so the responsive narrow rendering—not a false 1:1 desktop screenshot—is the final browser evidence.
+
+**Findings**
+
+- No actionable P0/P1/P2 issue remains in the implemented task shell at the available browser viewport. The responsive version preserves the fixed hierarchy: pure full-screen color, wordmark, five-node trail, one central panel and the two generated IP guides. It intentionally scrolls vertically on a narrow portrait browser so controls remain reachable.
+- The selected artwork uses a different orange task/color example from the purple conversation route; this is intentional category theming. The same panel structure, scale relationship, white wordmark and small companion placement are retained.
+
+**Required fidelity surfaces**
+
+- Fonts and typography: TEST! remains the supplied source-derived canvas, not an approximate font. DM Sans is used for readable Chinese task copy, with the task title, response areas and primary action retaining a compact hierarchy.
+- Spacing and layout: desktop rules use a 66.8vw central panel and separate header corners; narrow screens swap to one full-width panel with all task controls in document flow. A compact-height pass reduces options, padding and action height so a 16:9 desktop surface does not clip the primary control.
+- Colors and tokens: blue, green, violet and orange are solid full-page category tokens; panel surfaces stay white, with only pale category tints inside interactive states. No dark canvas, sidebar or additional dashboard cards were introduced.
+- Image quality and asset fidelity: `public/assets/assessment-guides-crop.png` is a generated original line-art guide pair with its chroma backdrop removed; it is a real local raster asset, not CSS/SVG art. The paired characters retain sharp white outlines at their intended small scale.
+- Copy and content: all four modes have coherent Chinese prompts. Blue comprehensive assessment runs objective → conversation → Agent tasks across five levels, rather than reverting to a static three-icon summary.
+
+**Interaction checks**
+
+- The selection cards open their own map routes. A map level opens its corresponding task and returns to the map with the next level unlocked after completion.
+- Browser check: a conversation reply was entered and sent; “确认下一关” became enabled; completing it returned to `#assessment/conversation` and unlocked level four.
+- Browser check: selecting an objective answer enabled “提交答案”; entering an Agent instruction enabled “运行并继续”.
+- Browser runtime logs stopped adding errors after the React key-prop warning was corrected.
+
+**Implementation checklist**
+
+- [x] Five-stage maps for all four assessment types
+- [x] Working objective, conversation and practical interaction states
+- [x] Blue comprehensive route mixes all three interaction modes
+- [x] Original local IP artwork and reduced-motion-safe entrance motion
+- [x] Production build and automated regression suite
+
+final result: passed
+
+## Latest revision: case startup, buffering, and full-bleed media
+
+Scope: make the first homepage reveal wait for the three initially visible real cases; remove the pixel pirate from every carousel group; retain the prior frame while any replacement is still warming; and remove Wing It/Mario letterboxing inside the cube displays.
+
+Implementation checks: the initial screen IDs are collected from the first three face configurations. The home canvas remains visually withheld until every one reports a decoded video frame or two rendered scene frames. Only then does the next group mount as a preload. The existing two-layer buffer continues to keep the shown layer above a pending layer until readiness, including a recoverable error state. Wing It now uses `object-fit: cover`; Mario's showcase canvas is a full-viewport cover surface. The manifest contains four cases only, without `pirate-pixel`.
+
+Verification: production compilation passed. The complete automated suite passed (45 tests), including new checks for four-case rotation, boot-gated preload ordering, and the two full-bleed media rules. No browser visual run was requested for this performance-focused update; runtime frame timing and network throughput remain device-dependent and are not claimed as benchmarked.
+
 ## Latest revision: demo login form inside the front screen
 
 Implementation checks: passed. This scoped form addition was checked through rendered markup, submission-unit tests, routing source checks and production compilation; no new browser visual QA was performed in this pass. Earlier screenshot comparisons below describe the preceding shell/rotation revisions, not a screenshot-verified form.

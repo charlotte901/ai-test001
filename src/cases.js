@@ -29,13 +29,6 @@ export const CASES = [
     kind: "scene",
     src: "/cases/pirate/index.html?showcase=1",
   },
-  {
-    id: "pirate-pixel",
-    name: "海盗船 · 像素版",
-    detail: "像素风格 · 实时 3D",
-    kind: "scene",
-    src: "/cases/pirate/pixel.html?showcase=1",
-  },
 ];
 export function normalizeCaseIndex(index) {
   return ((index % CASES.length) + CASES.length) % CASES.length;

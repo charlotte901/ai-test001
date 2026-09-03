@@ -236,9 +236,10 @@ function Media({ config, onEdit }) {
 }
 /** Public contract: {top,left,right} → {type, src?, fit?, content?, text?}.
  * Pass any React node as config.content with type: 'component'. */
-export function ScreenContent({ config, onEdit, nextConfig, active = true }) {
+export function ScreenContent({ config, onEdit, nextConfig, active = true, preload, onCaseReady }) {
   if (config.type === "case")
-    return <CaseScreen config={config} nextConfig={nextConfig} active={active} />;
+    return <CaseScreen config={config} nextConfig={nextConfig} active={active}
+      preload={preload} onCaseReady={onCaseReady} />;
   if (config.type === "component") return config.content;
   if (config.type === "clock") return <FocusClock />;
   if (config.type === "progress") return <ProgressWidget />;
@@ -254,7 +255,7 @@ export function ScreenContent({ config, onEdit, nextConfig, active = true }) {
     );
   return null;
 }
-export function CubeDisplay({ faces, nextFaces, flattened = false, active = true, onMotionChange, loginContent, loginScreenSize }) {
+export function CubeDisplay({ faces, nextFaces, flattened = false, active = true, onMotionChange, loginContent, loginScreenSize, preloadCases = true, onCaseReady }) {
   const root = useRef(null);
   const progress = useRef(flattened ? 1 : 0);
   const [ready, setReady] = useState(false);
@@ -357,7 +358,8 @@ export function CubeDisplay({ faces, nextFaces, flattened = false, active = true
             inert={!(showLogin && key === "right") && (blankFaces || (settled && key !== "right"))}
           >
             {!original && (
-              <ScreenContent config={faces[key]} nextConfig={nextFaces?.[key]} active={active && !blankFaces} />
+              <ScreenContent config={faces[key]} nextConfig={nextFaces?.[key]}
+                active={active && !blankFaces} preload={preloadCases} onCaseReady={onCaseReady} />
             )}
             {showLogin && key === "right" && (
               <div className="login-surface" style={{

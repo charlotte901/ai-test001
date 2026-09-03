@@ -6,7 +6,7 @@
 :root {
   font-family: "DM Sans", Arial, sans-serif;
   color: #fff;
-  background: #f8f2ee;
+  background: var(--pink);
   font-synthesis: none;
   --pink: #f568a3;
   --ink: #111014;
@@ -19,6 +19,7 @@
 body {
   margin: 0;
   min-width: 320px;
+  background: var(--pink);
   -webkit-font-smoothing: antialiased;
 }
 button,
@@ -87,6 +88,12 @@ button:hover {
   transform-origin: top left;
   isolation: isolate;
   overflow: hidden;
+  opacity: 1;
+  transition: opacity 180ms ease;
+}
+.app.is-case-booting .design-canvas {
+  opacity: 0;
+  pointer-events: none;
 }
 .pink-frame {
   position: absolute;

@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { App } from "./App";
 import { AssessmentHub } from "./AssessmentHub";
+import { AssessmentMap, AssessmentTask } from "./AssessmentFlow";
 import { ChooseHub } from "./ChooseHub";
+import { assessmentHash, getAssessmentRoute } from "./assessment-flow";
 import { animateCards } from "./card-transition";
 import {
   animateStrips,
@@ -12,6 +14,8 @@ import {
 } from "./split-transition";
 
 const route = () => {
+  const assessment = getAssessmentRoute();
+  if (assessment) return assessment.mode === "task" ? "assessment-task" : "assessment-map";
   if (location.hash === "#assessments") return "assessments";
   if (location.hash === "#choose") return "choose";
   return location.hash === "#login" ? "login" : "home";
@@ -22,6 +26,8 @@ const PANEL = {
   login: "cube",
   choose: "choose",
   assessments: "assessments",
+  "assessment-map": "assessment-flow",
+  "assessment-task": "assessment-flow",
 };
 // login → choose keeps the three-band strip pull; the choose ↔ assessments
 // hop flies whole cards out and in. Back from choose reveals the still-flat
@@ -30,6 +36,15 @@ const STRIP_MOVES = new Set(["login>choose", "choose>home"]);
 
 export function SiteExperience() {
   const [view, setView] = useState(route);
+  const [assessmentRoute, setAssessmentRoute] = useState(
+    () => getAssessmentRoute() ?? { id: "comprehensive", stage: 1, mode: "map" },
+  );
+  const [progress, setProgress] = useState({
+    comprehensive: 1,
+    objective: 1,
+    conversation: 1,
+    practical: 1,
+  });
   const [moving, setMoving] = useState(false);
   const [holdingLogin, setHoldingLogin] = useState(false);
   const [cubeMounted, setCubeMounted] = useState(
@@ -39,7 +54,11 @@ export function SiteExperience() {
   const stage = useRef(null);
   const busy = useRef(false);
   useEffect(() => {
-    const pop = () => setView(route());
+    const pop = () => {
+      const nextAssessment = getAssessmentRoute();
+      if (nextAssessment) setAssessmentRoute(nextAssessment);
+      setView(route());
+    };
     window.addEventListener("popstate", pop);
     window.addEventListener("hashchange", pop);
     return () => {
@@ -51,6 +70,10 @@ export function SiteExperience() {
     if (view === "home" || view === "login") setCubeMounted(true);
     document.title = view === "assessments"
       ? "AIQUOS — 选择测评方式"
+      : view === "assessment-map"
+        ? "AIQUOS — 闯关地图"
+        : view === "assessment-task"
+          ? "AIQUOS — AI 能力测评"
       : view === "choose"
         ? "AIQUOS — 选择你的下一步"
         : view === "login"
@@ -61,6 +84,8 @@ export function SiteExperience() {
     if (!moving) {
       const target = view === "assessments"
         ? ".assessment-wordmark"
+        : view === "assessment-map" || view === "assessment-task"
+          ? ".flow-wordmark"
         : view === "choose"
           ? ".choose-wordmark"
           : view === "login"
@@ -70,7 +95,7 @@ export function SiteExperience() {
     }
   }, [moving, view]);
 
-  async function go(next) {
+  async function go(next, hash = `#${next}`) {
     if (busy.current || next === view) return;
     const fromPanel = panels.current[PANEL[view]];
     const toPanel = panels.current[PANEL[next]];
@@ -81,7 +106,7 @@ export function SiteExperience() {
     if (reduce || fromPanel === toPanel || !stage.current) {
       setView(next);
       window.scrollTo(0, 0);
-      history.pushState(null, "", `#${next}`);
+      history.pushState(null, "", hash);
       return;
     }
     busy.current = true;
@@ -104,7 +129,7 @@ export function SiteExperience() {
       if (next === "home") setHoldingLogin(true);
       setView(next);
       window.scrollTo(0, 0);
-      history.pushState(null, "", `#${next}`);
+      history.pushState(null, "", hash);
       await new Promise((resolve) =>
         requestAnimationFrame(() => requestAnimationFrame(resolve)),
       );
@@ -127,6 +152,27 @@ export function SiteExperience() {
     }
   }
 
+  function openAssessmentMap(id) {
+    const stage = progress[id] ?? 1;
+    setAssessmentRoute({ id, stage, mode: "map" });
+    go("assessment-map", assessmentHash(id));
+  }
+
+  function openAssessmentStage(stage) {
+    const complete = progress[assessmentRoute.id] ?? 1;
+    if (stage > complete) return;
+    setAssessmentRoute((current) => ({ ...current, stage, mode: "task" }));
+    go("assessment-task", assessmentHash(assessmentRoute.id, stage));
+  }
+
+  function completeAssessmentStage(stage) {
+    const id = assessmentRoute.id;
+    const nextStage = Math.min(5, stage + 1);
+    setProgress((current) => ({ ...current, [id]: Math.max(current[id] ?? 1, nextStage) }));
+    setAssessmentRoute({ id, stage: nextStage, mode: "map" });
+    go("assessment-map", assessmentHash(id));
+  }
+
   return (
     <div className="site-experience" data-view={view} aria-busy={moving}>
       <div
@@ -134,7 +180,7 @@ export function SiteExperience() {
         ref={(node) => {
           panels.current.cube = node;
         }}
-        hidden={view === "choose" || view === "assessments"}
+        hidden={view === "choose" || view === "assessments" || view === "assessment-map" || view === "assessment-task"}
       >
         {(cubeMounted || view === "home" || view === "login") && (
           <App
@@ -168,7 +214,35 @@ export function SiteExperience() {
         }}
         hidden={view !== "assessments"}
       >
-        <AssessmentHub onBack={() => go("choose")} busy={moving} />
+        <AssessmentHub onBack={() => go("choose")} onStart={openAssessmentMap} busy={moving} />
+      </div>
+      <div
+        className="experience-panel"
+        ref={(node) => {
+          panels.current["assessment-flow"] = node;
+        }}
+        hidden={view !== "assessment-map" && view !== "assessment-task"}
+      >
+        {view === "assessment-map" ? (
+          <AssessmentMap
+            id={assessmentRoute.id}
+            current={progress[assessmentRoute.id] ?? 1}
+            complete={progress[assessmentRoute.id] ?? 1}
+            onBack={() => go("assessments")}
+            onOpenStage={openAssessmentStage}
+            busy={moving}
+          />
+        ) : (
+          <AssessmentTask
+            id={assessmentRoute.id}
+            stage={assessmentRoute.stage}
+            complete={progress[assessmentRoute.id] ?? 1}
+            onBack={() => openAssessmentMap(assessmentRoute.id)}
+            onPick={openAssessmentStage}
+            onComplete={completeAssessmentStage}
+            busy={moving}
+          />
+        )}
       </div>
       <div className="split-transition" ref={stage} aria-hidden="true" />
     </div>

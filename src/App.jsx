@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
   ArrowLeft,
@@ -120,12 +120,21 @@ export function App({ onLogin, onBack, onLoginComplete, loginView = false, activ
   });
   const [faces, setFaces] = useState(() => getCaseFaces(0));
   const [preset, setPreset] = useState(0);
+  const initialCaseIds = useRef(new Set(Object.values(getCaseFaces(0)).map((item) => item.id)));
+  const [bootedCases, setBootedCases] = useState(() => new Set());
   const nextFaces = useMemo(() => getCaseFaces(preset + 1), [preset]);
   const [playing, setPlaying] = useState(
     () => !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
   const [visible, setVisible] = useState(() => !document.hidden);
   const [modal, setModal] = useState(null);
+  const casesReady = bootedCases.size === initialCaseIds.current.size;
+  const handleCaseReady = useCallback((id) => {
+    if (!initialCaseIds.current.has(id)) return;
+    setBootedCases((previous) => previous.has(id)
+      ? previous
+      : new Set([...previous, id]));
+  }, []);
   useEffect(() => {
     const change = () => setVisible(!document.hidden);
     document.addEventListener("visibilitychange", change);
@@ -133,6 +142,7 @@ export function App({ onLogin, onBack, onLoginComplete, loginView = false, activ
   }, []);
   useEffect(() => {
     if (
+      !casesReady ||
       !active ||
       loginView ||
       transitionBusy ||
@@ -148,7 +158,7 @@ export function App({ onLogin, onBack, onLoginComplete, loginView = false, activ
       setFaces(getCaseFaces(next));
     }, CASE_INTERVAL);
     return () => clearTimeout(timer);
-  }, [active, loginView, transitionBusy, playing, visible, modal, preset]);
+  }, [casesReady, active, loginView, transitionBusy, playing, visible, modal, preset]);
   useEffect(() => {
     const resize = () => {
       const next = {
@@ -174,6 +184,7 @@ export function App({ onLogin, onBack, onLoginComplete, loginView = false, activ
   const flat = getFlatLayout(size.width, size.height);
   const loginScreenSize = getLoginScreenSize(size.width, size.height);
   function choosePreset(index) {
+    if (!casesReady) return;
     const next = normalizeCaseIndex(index);
     setPreset(next);
     setFaces(getCaseFaces(next));
@@ -185,14 +196,16 @@ export function App({ onLogin, onBack, onLoginComplete, loginView = false, activ
   }
   return (
     <main
-      className={`app ${loginView ? "is-login-view" : ""}`}
+      className={`app ${loginView ? "is-login-view" : ""} ${casesReady ? "is-cases-ready" : "is-case-booting"}`}
       data-layout={layout.compact ? "compact" : "wide"}
+      aria-busy={!casesReady}
       style={{ ...layout.variables, "--flat-x": `${flat.x}px`, "--flat-y": `${flat.y}px`, "--flat-scale": flat.scale }}
     >
       <div className="canvas-space">
         <section
           className="design-canvas"
           aria-label="AIQUOS creative learning playground"
+          inert={!casesReady}
         >
           <ReferenceBackground />
           <header className="site-header">
@@ -285,6 +298,8 @@ export function App({ onLogin, onBack, onLoginComplete, loginView = false, activ
             <CubeDisplay faces={faces} nextFaces={nextFaces} flattened={loginView}
               active={active && visible} onMotionChange={onCubeMotionChange}
               loginScreenSize={loginScreenSize}
+              preloadCases={casesReady}
+              onCaseReady={handleCaseReady}
               loginContent={<LoginForm onLogin={onLoginComplete} />} />
           </div>
           <section className="case-carousel" aria-label="案例轮播" inert={loginView} aria-hidden={loginView}>

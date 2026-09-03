@@ -29,7 +29,7 @@ export function SourceCrop({ crop, className = "", source = ASSESSMENT_ART, widt
   );
 }
 
-export function AssessmentHub({ onBack, busy }) {
+export function AssessmentHub({ onBack, onStart, busy }) {
   const [size, setSize] = useState(() => ({
     width: innerWidth,
     height: innerHeight,
@@ -70,7 +70,10 @@ export function AssessmentHub({ onBack, busy }) {
               className="assessment-card"
               aria-label={`${item.title} · ${item.subtitle}`}
               aria-pressed={selected === item.id}
-              onClick={() => setSelected(item.id)}
+              onClick={() => {
+                setSelected(item.id);
+                onStart?.(item.id);
+              }}
               disabled={busy}
             >
               <SourceCrop crop={item.crop} />

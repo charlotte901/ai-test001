@@ -4,10 +4,20 @@ if (new URLSearchParams(location.search).has("showcase")) {
   let active = !new URLSearchParams(location.search).has("preload");
   let renderedFrames = 0;
   let captureRequest = null;
+  let readyAcknowledged = false;
+  let readyRetry = null;
+  const announceReady = () => {
+    parent.postMessage({ type: "aiquos:ready" }, "*");
+    if (!readyAcknowledged) readyRetry = setTimeout(announceReady, 350);
+  };
   window.addEventListener("message", (event) => {
     if (event.source !== parent) return;
     if (event.data?.type === "aiquos:visibility")
       active = event.data.active === true;
+    if (event.data?.type === "aiquos:ready-ack") {
+      readyAcknowledged = true;
+      clearTimeout(readyRetry);
+    }
     if (event.data?.type === "aiquos:capture")
       captureRequest = { id: event.data.requestId, origin: event.origin };
   });
@@ -21,7 +31,7 @@ if (new URLSearchParams(location.search).has("showcase")) {
         callback(time);
         if (renderedFrames < 2 && document.querySelector("canvas")) {
           renderedFrames++;
-          if (renderedFrames === 2) parent.postMessage({ type: "aiquos:ready" }, "*");
+          if (renderedFrames === 2) announceReady();
         }
         if (captureRequest) {
           try {

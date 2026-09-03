@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ArrowClockwise, SpeakerHigh, SpeakerSlash } from "@phosphor-icons/react";
 import { getCaseLayers } from "./case-buffer";
 
 /** Keep the outgoing scene until its replacement has a decoded/rendered frame.
  * Only one current layer and one pending layer are mounted per display. */
-export function CaseScreen({ config, nextConfig, active = true }) {
+export function CaseScreen({ config, nextConfig, active = true, preload = true, onCaseReady }) {
   const [shown, setShown] = useState(config);
   const [previous, setPrevious] = useState(null);
   const ready = useRef(new Set());
@@ -23,8 +23,9 @@ export function CaseScreen({ config, nextConfig, active = true }) {
   }, []);
   const prepared = useCallback((id) => {
     ready.current.add(id);
+    onCaseReady?.(id);
     if (requested.current.id === id) promote(requested.current);
-  }, [promote]);
+  }, [onCaseReady, promote]);
   const disposed = useCallback((id) => ready.current.delete(id), []);
   useEffect(() => {
     if (ready.current.has(config.id)) promote(config);
@@ -32,7 +33,9 @@ export function CaseScreen({ config, nextConfig, active = true }) {
   useEffect(() => () => clearTimeout(fadeTimer.current), []);
 
   // Do not preload a third scene during the short crossfade or a manual jump.
-  const layers = getCaseLayers(previous, shown, config, nextConfig);
+  // During the first visit only the three visible screens are allowed to load.
+  // The next group begins warming after all three have a real frame.
+  const layers = getCaseLayers(previous, shown, config, preload ? nextConfig : null);
   return (
     <div className="case-screen" data-case={shown.id} data-requested-case={config.id}>
       {layers.map((item) => (
@@ -66,10 +69,16 @@ function CaseLayer({ config, visible, outgoing, active, onReady, onDispose }) {
     onReady(config.id);
     syncPlayback();
   }, [config.id, onReady, syncPlayback]);
-  useEffect(() => {
+  // An iframe can paint two scene frames before a normal effect has attached
+  // its message listener.  Attach during the layout phase and acknowledge the
+  // ready signal, so a fast local scene can never strand the cold homepage in
+  // its boot state.
+  useLayoutEffect(() => {
     const receive = (event) => {
-      if (event.source === media.current?.contentWindow && event.data?.type === "aiquos:ready")
+      if (event.source === media.current?.contentWindow && event.data?.type === "aiquos:ready") {
         markReady();
+        media.current?.contentWindow?.postMessage({ type: "aiquos:ready-ack" }, "*");
+      }
     };
     window.addEventListener("message", receive);
     return () => {
@@ -88,12 +97,12 @@ function CaseLayer({ config, visible, outgoing, active, onReady, onDispose }) {
           playsInline loop muted={muted} preload="auto"
           aria-label={`${config.name} · ${config.detail}`}
           onLoadedData={markReady} onCanPlay={syncPlayback}
-          onError={() => setFailed(true)} />
+          onError={() => { setFailed(true); onReady(config.id); }} />
       ) : (
         <iframe key={attempt} ref={media}
           src={`${config.src}&preload=1`}
           title={`${config.name} · 实时案例`} sandbox="allow-scripts"
-          tabIndex={-1} onLoad={syncPlayback} onError={() => setFailed(true)} />
+          tabIndex={-1} onLoad={syncPlayback} onError={() => { setFailed(true); onReady(config.id); }} />
       )}
       {!ready && !failed && visible && <div className="case-loading">正在准备画面…</div>}
       {failed && visible && (

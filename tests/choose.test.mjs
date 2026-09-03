@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { access } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import {
   CHOICES,
   CHOOSE_ART,
@@ -26,10 +26,8 @@ test("three choose cards keep source-bounded crops and unchanged copy", async ()
   await access(new URL(`../public${CHOOSE_ART}`, import.meta.url));
 });
 
-test("choose matches the assessments rhythm and uses two-column mode on phones", () => {
-  assert.equal(getChooseLayout(1822, 1113).variables["--choose-unit"], 1);
-  const reference = getChooseLayout(1822, 863).variables["--choose-unit"];
-  assert.ok(Math.abs(reference - 863 / 1113) < 1e-10);
+test("choose matches the TEST title/card rhythm and uses two-column mode on phones", () => {
+  assert.equal(getChooseLayout(1672, 941).variables["--choose-unit"], 1);
   for (const [width, height] of [
     [320, 568],
     [390, 844],
@@ -39,12 +37,13 @@ test("choose matches the assessments rhythm and uses two-column mode on phones",
   ]) {
     const layout = getChooseLayout(width, height);
     assert.ok(layout.variables["--choose-unit"] > 0);
-    assert.ok(layout.variables["--choose-unit"] <= width / 1822 + 1e-10);
+    assert.ok(layout.variables["--choose-unit"] <= width / 1672 + 1e-10);
     assert.equal(layout.compact, width < 760);
   }
-  // cards keep ~45% of the height budget, like the assessments page
-  const wide = getChooseLayout(1822, 900);
-  assert.ok(Math.abs(wide.variables["--choose-unit"] * 503 / 900 - 420 / 941) < 0.01);
+  // At the shared design viewport heading and cards use TEST's exact heights.
+  const shared = getChooseLayout(1672, 941).variables["--choose-unit"];
+  assert.equal(shared * 188, 188);
+  assert.equal(shared * 420, 420);
 });
 
 test("card flight keeps whole cards intact and travels beyond the viewport", () => {
@@ -63,4 +62,9 @@ test("card flight keeps whole cards intact and travels beyond the viewport", () 
     reverse.keyframes[1].transform,
     getCardFlight("out", 0, 3, rect, viewport, false).keyframes[1].transform,
   );
+});
+
+test("choose card crops retain their source-art offsets", async () => {
+  const css = await readFile(new URL("../src/choose.css", import.meta.url), "utf8");
+  assert.doesNotMatch(css, /\.choose-card \.source-crop img\s*\{/);
 });
