@@ -26,6 +26,11 @@ if (new URLSearchParams(location.search).has("showcase")) {
     }
     if (event.data?.type === "aiquos:capture")
       captureRequest = { id: event.data.requestId, origin: event.origin };
+    if (event.data?.type === "aiquos:status")
+      parent.postMessage(
+        { type: "aiquos:status-reply", active, renderedFrames, contextLost, hidden: document.hidden },
+        event.origin,
+      );
   });
   // A lost WebGL context leaves the canvas permanently black and no activation
   // nudge can heal it. Allow the browser to restore it; if it does not come

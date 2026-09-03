@@ -52,19 +52,14 @@
     transform 240ms ease,
     box-shadow 240ms ease;
 }
-/* The display is the crop: keep the artwork's full height and center-crop
- * horizontally, exactly like the choose cards. */
-.profile-card .source-crop {
+/* Cards show the pre-cropped artwork undistorted: cover fills any box shape
+ * and object-position keeps each card's bottom title band in frame. */
+.profile-card .profile-art {
   display: block;
   width: 100%;
   height: 100%;
-}
-.profile-card .source-crop img {
-  width: auto;
-  height: 100%;
-  left: 50%;
-  top: 0;
-  transform: translateX(-50%);
+  object-fit: cover;
+  object-position: 50% 100%;
 }
 .profile-card:hover {
   transform: translateY(-7px);

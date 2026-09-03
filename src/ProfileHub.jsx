@@ -1,8 +1,33 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Check } from "@phosphor-icons/react";
-import { SourceCrop } from "./AssessmentHub";
 import { TestWordmark } from "./TestWordmark";
 import { PROFILE_CARDS, PROFILE_ART, PROFILE_WORDMARK, getProfileLayout } from "./profile-layout";
+
+/** Cut one card's pixels out of the source art once, then let object-fit
+ * cover any box shape without the stretch-fit distortion that bent the
+ * narrower cards sideways. */
+function ProfileCardArt({ crop }) {
+  const [x, y, width, height] = crop;
+  const [src, setSrc] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    const source = new Image();
+    source.onload = () => {
+      if (cancelled) return;
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d").drawImage(source, x, y, width, height, 0, 0, width, height);
+      setSrc(canvas.toDataURL("image/png"));
+    };
+    source.src = PROFILE_ART;
+    return () => {
+      cancelled = true;
+      source.onload = null;
+    };
+  }, [x, y, width, height]);
+  return <img className="profile-art" src={src} alt="" draggable="false" />;
+}
 
 export function ProfileHub({ onBack, busy }) {
   const [size, setSize] = useState(() => ({ width: innerWidth, height: innerHeight }));
@@ -29,7 +54,7 @@ export function ProfileHub({ onBack, busy }) {
               aria-pressed={selected === item.id}
               disabled={busy}
               onClick={() => setSelected(item.id)}>
-              <SourceCrop crop={item.crop} source={PROFILE_ART} width={1672} height={941} />
+              <ProfileCardArt crop={item.crop} />
               {selected === item.id && (
                 <span className="assessment-check">
                   <Check size={18} weight="bold" />
