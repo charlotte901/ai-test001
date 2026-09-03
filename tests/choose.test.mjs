@@ -26,8 +26,10 @@ test("three choose cards keep source-bounded crops and unchanged copy", async ()
   await access(new URL(`../public${CHOOSE_ART}`, import.meta.url));
 });
 
-test("choose scales uniformly and uses two-column mode on phones", () => {
-  assert.equal(getChooseLayout(1822, 863).variables["--choose-unit"], 1);
+test("choose matches the assessments rhythm and uses two-column mode on phones", () => {
+  assert.equal(getChooseLayout(1822, 1113).variables["--choose-unit"], 1);
+  const reference = getChooseLayout(1822, 863).variables["--choose-unit"];
+  assert.ok(Math.abs(reference - 863 / 1113) < 1e-10);
   for (const [width, height] of [
     [320, 568],
     [390, 844],
@@ -37,9 +39,12 @@ test("choose scales uniformly and uses two-column mode on phones", () => {
   ]) {
     const layout = getChooseLayout(width, height);
     assert.ok(layout.variables["--choose-unit"] > 0);
-    assert.ok(layout.variables["--choose-unit"] <= width / 1822);
+    assert.ok(layout.variables["--choose-unit"] <= width / 1822 + 1e-10);
     assert.equal(layout.compact, width < 760);
   }
+  // cards keep ~45% of the height budget, like the assessments page
+  const wide = getChooseLayout(1822, 900);
+  assert.ok(Math.abs(wide.variables["--choose-unit"] * 503 / 900 - 420 / 941) < 0.01);
 });
 
 test("card flight keeps whole cards intact and travels beyond the viewport", () => {

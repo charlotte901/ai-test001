@@ -7,6 +7,9 @@ export const CHOICES = [
 ];
 
 export function getChooseLayout(width, height) {
-  const unit = Math.min(width / 1822, Math.max(height, 520) / 863);
+  // 1113 is the virtual design height that reproduces the assessments page's
+  // rhythm (title ~13%, card top ~35%, cards ~45% of height); the 863px
+  // source art alone makes cards fill 58% and hug the viewport bottom.
+  const unit = Math.min(width / 1822, Math.max(height, 560) / 1113);
   return { compact: width < 760, variables: { "--choose-unit": unit } };
 }
