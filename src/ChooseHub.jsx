@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "@phosphor-icons/react";
+import { ArrowLeft, Check } from "@phosphor-icons/react";
 import { SourceCrop } from "./AssessmentHub";
 import { TestWordmark } from "./TestWordmark";
 import { CHOICES, CHOOSE_ART, CHOOSE_WORDMARK, getChooseLayout } from "./choose-layout";
@@ -30,6 +30,11 @@ export function ChooseHub({ onBack, onTest, busy }) {
               disabled={busy}
               onClick={() => item.id === "test" ? onTest() : setSelected(item.id)}>
               <SourceCrop crop={item.crop} source={CHOOSE_ART} width={1822} height={863} />
+              {selected === item.id && (
+                <span className="assessment-check">
+                  <Check size={18} weight="bold" />
+                </span>
+              )}
             </button>
           ))}
         </div>

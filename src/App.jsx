@@ -356,7 +356,7 @@ export function App({ onLogin, onBack, onLoginComplete, loginView = false, activ
           <div className="info-body">
             <p>AIQUOS 将学习、创作与专注，放在触手可及的三个屏幕上。</p>
             <p>
-              在真实案例中观察 AI 的创作能力，并探索如何把想法变成作品。登录入口提供免验证的表单演示，可进入测评方式选择页；真实账号与评分尚未接入。
+              在真实案例中观察 AI 的创作能力，并探索如何把想法变成作品。登录入口提供免验证的表单演示，登录后先进入功能选择页，再从测试闯关进入测评方式选择；真实账号与评分尚未接入。
             </p>
             <button className="done-button" onClick={reset}>
               开始探索

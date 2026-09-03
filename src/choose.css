@@ -53,6 +53,7 @@
 .choose-screen[data-compact="true"] .choose-card { grid-column: auto; border-radius: 16px; }
 .choose-screen[data-compact="true"] .choose-card:last-child { grid-column: 1 / -1; width: calc((100% - 16px) / 2); justify-self: center; }
 .choose-screen[data-compact="true"] .assessment-back { left: 19px; top: 23px; }
+.choose-screen[data-compact="true"] .assessment-check { width: 25px; height: 25px; top: 10px; right: 10px; }
 .card-flight-layer { position: absolute; inset: 0; pointer-events: none; }
 .card-flight-layer .experience-panel,
 .card-flight-layer .choose-screen,
