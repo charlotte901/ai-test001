@@ -3,3 +3,6 @@ dist/
 .DS_Store
 .openai/
 *.log
+.env
+.env.*
+!.env.example

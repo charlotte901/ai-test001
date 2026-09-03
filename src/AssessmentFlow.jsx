@@ -4,6 +4,8 @@ import {
   ArrowRight,
   Check,
   ChatCircleDots,
+  ClipboardText,
+  CircleNotch,
   ListChecks,
   PaperPlaneTilt,
   Sparkle,
@@ -14,10 +16,11 @@ import {
   ASSESSMENT_THEMES,
   CONVERSATIONS,
   getStageMode,
-  PRACTICALS,
+  PRACTICAL_TASKS,
   QUESTIONS,
   STAGE_LABELS,
 } from "./assessment-flow";
+import { generateArkImage, streamDeepSeek } from "./deepseek";
 
 const GUIDES = "/assets/assessment-guides-crop.png";
 
@@ -40,7 +43,7 @@ function Progress({ current, complete, onPick, disabled = false }) {
             </button>
           );
         })}
-      </div>
+        </div>
       <span>{current} / 5</span>
     </div>
   );
@@ -140,40 +143,109 @@ function ObjectiveTask({ stage, onComplete }) {
 
 function ConversationTask({ stage, onComplete }) {
   const [draft, setDraft] = useState("");
-  const [sent, setSent] = useState(false);
-  const send = () => {
-    if (sent) {
+  const threadNode = useRef(null);
+  const [thread, setThread] = useState([
+    { role: "assistant", content: "先说说你希望最终结果解决什么问题。" },
+    { role: "user", content: "我希望目标更具体，也方便直接执行。", sample: true },
+    { role: "assistant", content: CONVERSATIONS[stage - 1] },
+  ]);
+  const [isSending, setIsSending] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    const node = threadNode.current;
+    if (node) node.scrollTop = node.scrollHeight;
+  }, [thread]);
+  const send = async () => {
+    if (isReady) {
       onComplete();
       return;
     }
-    if (!draft.trim()) return;
-    setSent(true);
+    const content = draft.trim();
+    if (!content || isSending) return;
+    const nextThread = [...thread, { role: "user", content }, { role: "assistant", content: "", pending: true }];
+    setThread(nextThread);
+    setDraft("");
+    setError("");
+    setIsSending(true);
+    try {
+      await streamDeepSeek({
+        messages: [
+          { role: "system", content: "你是 AIQUOS 的测评向导。请用中文简洁回应用户，帮助其把 AI 协作需求说得更具体；指出一个做得好的点和一个可执行的改进建议。不要替用户直接完成测评任务。" },
+          ...nextThread.filter((item) => !item.sample && !item.pending).map(({ role, content: message }) => ({ role, content: message })),
+        ],
+        onDelta: (message) => setThread((items) => items.map((item, index) => index === items.length - 1 ? { role: "assistant", content: message } : item)),
+      });
+      setIsReady(true);
+    } catch (requestError) {
+      setThread((items) => items.slice(0, -1));
+      setError(requestError.message || "发送失败，请重试。");
+    } finally {
+      setIsSending(false);
+    }
   };
   return <div className="task-body conversation-task">
     <h2>和 AI 向导一起想清楚</h2>
-    <div className="chat-thread" aria-live="polite">
-      <div className="chat-bubble is-guide"><span>AI</span><p>{CONVERSATIONS[stage - 1]}</p></div>
-      {sent && <div className="chat-bubble is-user"><p>{draft}</p><span>我</span></div>}
+    <div ref={threadNode} className="chat-thread" aria-live="polite">
+      {thread.map((item, index) => <div key={`${item.role}-${index}`} className={`chat-bubble ${item.role === "user" ? "is-user" : "is-guide"}${item.role === "assistant" && !item.pending && isReady && index === thread.length - 1 ? " is-feedback" : ""}`}><span>{item.role === "user" ? "我" : "AI"}</span><p>{item.pending ? <CircleNotch className="reply-spinner" weight="bold" /> : item.content}</p></div>)}
     </div>
-    <label className="task-composer"><span className="sr-only">输入你的回应</span><input value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => event.key === "Enter" && send()} placeholder={sent ? "已发送，点击箭头进入下一关" : "写下你的回应…"} /><button type="button" onClick={send} aria-label={sent ? "进入下一关" : "发送回应"}>{sent ? <ArrowRight weight="bold" /> : <PaperPlaneTilt weight="fill" />}</button></label>
+    {error && <p className="agent-error" role="alert">{error}</p>}
+    <label className="task-composer"><span className="sr-only">输入你的回应</span><input disabled={isSending || isReady} value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => event.key === "Enter" && send()} placeholder={isReady ? "已获得 AI 反馈，点击箭头进入下一关" : "写下你的回应…"} /><button type="button" disabled={isSending} onClick={send} aria-label={isReady ? "进入下一关" : "发送回应"}>{isSending ? <CircleNotch className="reply-spinner" weight="bold" /> : isReady ? <ArrowRight weight="bold" /> : <PaperPlaneTilt weight="fill" />}</button></label>
   </div>;
 }
 
 function PracticalTask({ stage, onComplete }) {
-  const [checks, setChecks] = useState([false, false, false]);
   const [draft, setDraft] = useState("");
-  const ready = checks.some(Boolean) || draft.trim().length > 0;
-  const steps = ["确认任务目标", "拆分执行步骤", "检查成果标准"];
+  const [showSource, setShowSource] = useState(false);
+  const [output, setOutput] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [isRunning, setIsRunning] = useState(false);
+  const [error, setError] = useState("");
+  const task = PRACTICAL_TASKS[stage - 1];
+  const isImageTask = task.outputType === "image";
+  const run = async () => {
+    if (output || imageUrl) return onComplete();
+    const prompt = draft.trim();
+    if (!prompt || isRunning) return;
+    setError("");
+    setOutput("");
+    setImageUrl("");
+    setIsRunning(true);
+    try {
+      if (isImageTask) {
+        setImageUrl(await generateArkImage({ prompt: `${task.title}\n${task.goal}\n任务要求：${task.requirements.join("；")}\n活动素材：${task.source}\n用户补充：${prompt}` }));
+        return;
+      }
+      await streamDeepSeek({
+        messages: [
+          { role: "system", content: "你是 AIQUOS 实操测评的执行 Agent。请严格根据用户提示词和原始素材完成任务；保留关键数据，不补充素材中没有的信息。输出仅包含最终交付内容，不解释你的推理。" },
+          { role: "user", content: `任务：${task.title}\n目标：${task.goal}\n要求：\n${task.requirements.map((item, index) => `${index + 1}. ${item}`).join("\n")}\n\n原始素材：\n${task.source}\n\n用户提示词：\n${prompt}` },
+        ],
+        onDelta: setOutput,
+      });
+    } catch (requestError) {
+      setError(requestError.message || "运行失败，请重试。");
+    } finally {
+      setIsRunning(false);
+    }
+  };
   return <div className="task-body practical-task">
-    <h2>让 AI 帮你完成这件事</h2>
-    <p className="agent-brief">{PRACTICALS[stage - 1]}</p>
-      <div className="agent-workspace">
-      <div className="agent-checklist" aria-label="执行计划">
-        {steps.map((label, index) => <label key={label}><input type="checkbox" checked={checks[index]} onChange={() => setChecks((value) => value.map((item, position) => position === index ? !item : item))} /><span>{label}</span></label>)}
-      </div>
-      <div className="agent-canvas" aria-label="Agent 工作区域"><span>Agent 将在这里展开执行结果</span></div>
+    <h2>{task.title}</h2>
+    <p className="agent-brief">{task.goal}</p>
+    <div className="agent-workspace">
+      <section className="agent-checklist" aria-label="任务要求">
+        <div className="agent-section-heading"><ClipboardText weight="fill" /><span>交付标准</span></div>
+        <ul>{task.requirements.map((item) => <li key={item}>{item}</li>)}</ul>
+        <button className="source-toggle" type="button" onClick={() => setShowSource((value) => !value)}>{showSource ? "收起原始汇报" : "查看原始口语汇报"}</button>
+        {showSource && <p className="source-copy">{task.source}</p>}
+      </section>
+      <section className="agent-canvas" aria-live="polite" aria-label="Agent 工作区域">
+        <div className="agent-section-heading"><Sparkle weight="fill" /><span>AI 输出</span></div>
+        {isRunning && !output && !imageUrl ? <div className="agent-empty"><CircleNotch className="reply-spinner" weight="bold" /><span>{isImageTask ? "正在生成主视觉…" : "正在整理材料…"}</span></div> : imageUrl ? <img className="agent-image" src={imageUrl} alt={`${task.title}生成结果`} /> : output ? <p className="agent-output">{output}</p> : <div className="agent-empty"><Sparkle weight="fill" /><span>写好提示词后，Agent 将在这里完成交付。</span></div>}
+      </section>
     </div>
-    <label className="agent-composer"><span className="sr-only">给 Agent 的第一条指令</span><textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="描述你希望它怎样开始…" /><button type="button" className="agent-send" disabled={!ready} onClick={onComplete} aria-label="运行并进入下一关"><PaperPlaneTilt weight="fill" /></button></label>
+    {error && <p className="agent-error" role="alert">{error}</p>}
+    <label className="agent-composer"><span className="sr-only">给 Agent 的提示词</span><textarea disabled={isRunning || Boolean(output) || Boolean(imageUrl)} value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={output || imageUrl ? "任务已完成，点击箭头进入下一关" : isImageTask ? "写下画面提示词，让 Agent 生成主视觉…" : "写下你的提示词，让 Agent 开始执行…"} /><button type="button" className="agent-send" disabled={isRunning || (!draft.trim() && !output && !imageUrl)} onClick={run} aria-label={output || imageUrl ? "进入下一关" : isImageTask ? "生成图片" : "运行 Agent"}>{isRunning ? <CircleNotch className="reply-spinner" weight="bold" /> : output || imageUrl ? <ArrowRight weight="bold" /> : <PaperPlaneTilt weight="fill" />}</button></label>
   </div>;
 }
 

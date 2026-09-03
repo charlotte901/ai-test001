@@ -7,6 +7,8 @@ test("every assessment has a five-stage journey and the blue route combines all 
   for (const theme of Object.values(ASSESSMENT_THEMES)) {
     assert.equal(theme.stages.length, 5);
     assert.ok(theme.color.startsWith("#"));
+    assert.ok(theme.glow.startsWith("#"));
+    assert.ok(theme.deep.startsWith("#"));
   }
   assert.deepEqual(new Set(ASSESSMENT_THEMES.comprehensive.stages), new Set(["objective", "conversation", "practical"]));
   assert.equal(STAGE_LABELS.length, 5);
@@ -21,6 +23,16 @@ test("the selected task template has real local IP artwork and all task surfaces
     assert.match(source, new RegExp(`function ${component}|export function ${component}`));
   }
   assert.match(source, /assessment-guides-crop\.png/);
+  assert.match(source, /getImageData/);
+  assert.match(source, /green > red \* 1\.35/);
+  assert.match(source, /agent-canvas/);
+  assert.match(source, /agent-send/);
+  assert.match(source, /chat-bubble \$\{item\.role === "user"/);
+  assert.match(source, /is-feedback/);
+  assert.match(source, /streamDeepSeek/);
+  assert.match(source, /generateArkImage/);
+  assert.match(source, /agent-image/);
+  assert.match(source, /查看原始口语汇报/);
 });
 
 test("assessment cards now open their working five-stage flow", async () => {

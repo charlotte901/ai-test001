@@ -2,9 +2,12 @@
 @import "@fontsource/dm-sans/500.css";
 @import "@fontsource/dm-sans/600.css";
 @import "@fontsource/dm-sans/700.css";
+@import "@fontsource/noto-sans-sc/chinese-simplified-500.css";
+@import "@fontsource/noto-sans-sc/chinese-simplified-600.css";
+@import "@fontsource/noto-sans-sc/chinese-simplified-700.css";
 
 :root {
-  font-family: "DM Sans", Arial, sans-serif;
+  font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "DM Sans", Arial, sans-serif;
   color: #fff;
   background: var(--pink);
   font-synthesis: none;

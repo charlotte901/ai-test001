@@ -1,5 +1,13 @@
+import { ARK_IMAGE_PATH, DEEPSEEK_CHAT_PATH, handleArkImage, handleDeepSeekChat } from "./deepseek.js";
+
 export default {
   async fetch(request, env) {
+    if (new URL(request.url).pathname === DEEPSEEK_CHAT_PATH) {
+      return handleDeepSeekChat(request, env.DEEPSEEK_API_KEY);
+    }
+    if (new URL(request.url).pathname === ARK_IMAGE_PATH) {
+      return handleArkImage(request, env.ARK_API_KEY);
+    }
     const response = await env.ASSETS.fetch(request);
     const acceptsHtml = request.headers.get("accept")?.includes("text/html");
 
