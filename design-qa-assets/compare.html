@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<title>Assessment visual comparison</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; background: #151515; color: white; font: 14px system-ui, sans-serif; }
+  section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  figure { margin: 0; }
+  figcaption { margin-bottom: 8px; opacity: .72; }
+  img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; }
+</style>
+<body>
+  <section><figure><figcaption>客观题参考</figcaption><img src="reference-objective.png"></figure><figure><figcaption>客观题实现</figcaption><img src="implementation-objective.png"></figure></section>
+  <section><figure><figcaption>对话式参考</figcaption><img src="reference-conversation.png"></figure><figure><figcaption>对话式实现</figcaption><img src="implementation-conversation.png"></figure></section>
+  <section><figure><figcaption>实操任务参考</figcaption><img src="reference-practical.png"></figure><figure><figcaption>实操任务实现</figcaption><img src="implementation-practical.png"></figure></section>
+</body>
+</html>

@@ -1,5 +1,83 @@
 # AIQUOS visual verification
 
+final result: blocked
+
+## Latest revision: readable streamed conversation feedback (2026-09-04)
+
+Source truth: the supplied post-reply conversation screenshot at `/var/folders/xd/w7bm0l8j6dlf_y7pgh5s1qsr0000gn/T/TemporaryItems/NSIRD_screencaptureui_k8ZFX0/截屏2026-09-04 01.57.44.png`. It establishes the violet category field, untouched white TEST!/guide art, large white conversation surface, dark high-contrast Chinese heading, conversational left/right rhythm, and a persistent lower composer after an AI reply arrives.
+
+Implementation: the conversation route alone now uses the reference panel geometry at desktop (`min(84.4vw, 1120px)` × `min(72dvh, 632px)` with the same proportional top interval). The bundled Noto Sans SC face replaces the prior Latin-first treatment for Chinese UI copy. The title, messages and composer are larger and darker; the final streamed response receives a distinct, still restrained, pale-category feedback surface. The message list has a bounded scroll region, and a ref-driven update follows the newest streamed reply so it stays visible above the fixed composer instead of creating a broken blank/overflow state.
+
+**Live interaction verification**
+
+- A real DeepSeek reply was requested from `#assessment/conversation/level/2`. The final assistant bubble was tagged `is-feedback`, the completed composer changed to the next-level action, and the feedback bubble remained visible after automatic scroll (`scrollTop: 841`, `scrollHeight: 1186`, `clientHeight: 310` on the narrow in-app preview).
+- The in-app browser produced no console warnings or errors during this reply-state check.
+- The available in-app automation surface is a 304 × 625 narrow viewport and cannot be resized to the supplied 1327 × 877 desktop reference. Its captured responsive evidence is `design-qa-assets/conversation-feedback-mobile.png`; it verifies safe scrolling and no composer collision, but is not misrepresented as a desktop pixel comparison.
+- `npm run test:sites` and `npm run build` both pass after the typography and streaming-layout change.
+
+The project-level result remains blocked only by the previously documented external Ark image-endpoint DNS verification, not by this conversation UI revision.
+
+## Latest revision: DeepSeek conversation and weekly-report Agent task (2026-09-04)
+
+Source truth: the provided task screenshot at `/var/folders/xd/w7bm0l8j6dlf_y7pgh5s1qsr0000gn/T/TemporaryItems/NSIRD_screencaptureui_b0qauq/截屏2026-09-04 01.21.29.png` governs the first practical task's content: a prompt must retain the original spoken report, produce a 250–400-character formal weekly report in three named sections, retain key figures and not invent facts. The supplied orange practical task reference remains the visual-shell source: its pure orange field, TEST! title, five-node progress trail, guide overlap, one large white panel, two work areas and bottom composer.
+
+Implementation evidence: browser capture `design-qa-assets/implementation-practical-agent.png` (1280 × 720, in-app browser CSS viewport 1280 × 720) shows the live completion state after an Agent result. The pre-existing orange visual reference is `design-qa-assets/reference-practical.png` (1672 × 941); both are 16:9 and compared after scale normalization in `design-qa-assets/deepseek-practical-compare.png`. Focused review used the live left task brief, output pane and bottom composer because those contain the new workbench affordances.
+
+**Findings and corrections**
+
+- P1 resolved: the prior generic checkbox list did not give a player enough task context. It is now a compact delivery-standard card with exact length, structure, factuality and data-retention constraints, plus an on-demand source-report view.
+- P1 resolved: the previously empty Agent pane now presents its generating state, streamed output and a completion action without altering the orange reference shell or adding dashboard chrome.
+- P2 resolved: the conversation screen sends real locally-entered content to the server-only DeepSeek proxy and streams the answer into the final chat bubble. Loading, error and next-level states remain visible and operable.
+- P3 follow-up: final AI output length naturally varies with a player's prompt. The result pane scrolls instead of resizing the fixed reference panel.
+
+**Required fidelity surfaces**
+
+- Fonts and typography: TEST! remains the local source-derived artwork; added task labels use the existing DM Sans hierarchy, with a restrained 12–14px operational scale.
+- Spacing and layout rhythm: the first practical task preserves the fixed wide panel, two-column interior and full-width lower composer from the orange reference. The detailed task material is contained in its original left-hand work area.
+- Colors and visual tokens: orange page tokens, white panel, pale orange borders and white guide line art remain unchanged; generated output uses existing neutral copy colors for readability.
+- Image quality and asset fidelity: no image assets were replaced or newly approximated. The retained white guide artwork remains clean over the panel.
+- Copy and content: the original report and its non-invention/three-section constraints are passed as task context. Agent output is the actual model result, not a simulated placeholder.
+
+**Interaction checks**
+
+- Browser test: a conversation reply received a streamed DeepSeek response; the screen exposed the next-level action afterward.
+- Browser test: the weekly-report Agent accepted a structured prompt, streamed a 373-character result and exposed the completion action afterward.
+- Browser console: no warnings or errors after both live requests.
+
+**Image-generation verification blocker**
+
+- The image-enabled second practical level is wired to the supplied Ark/OpenAI-compatible endpoint and exact `doubao-seedream-5-0-pro-260628` request contract. It has a validated server proxy, URL result handling, loading/error state and image-result surface. The vendor credential remains server-only under `ARK_API_KEY`.
+- Direct endpoint verification is blocked in this runtime: three attempts from the local server failed before a response, and a direct reachability check timed out during DNS resolution for `ark.cn-beijing.volces.com`. Text generation was separately verified end-to-end with the selected `deepseek-v4-flash-vision-exp` model.
+- This is an external network/DNS blocker rather than a visible UI or request-shape mismatch. Before production handoff, run one image task from a host that can resolve the Ark endpoint and confirm a URL renders in the right-hand work area.
+
+final result: blocked
+
+## Latest revision: high-fidelity objective, conversation and practical task screens (2026-09-04)
+
+Source truth: the three supplied 1672 × 941 references for objective green, conversation purple and practical orange. They establish the shared geometry: white TEST! art at the upper left, a five-node progress counter at the upper right, one large white rounded panel at approximately x=272, y=249, w=1117, h=632, and the two-character white guide artwork overlapping the panel's upper edge.
+
+Implementation evidence: `design-qa-assets/implementation-objective.png`, `design-qa-assets/implementation-conversation.png` and `design-qa-assets/implementation-practical.png` at the available 1280 × 720 in-app browser viewport. References and implementations are normalized into paired columns in `design-qa-assets/compare.html`; `design-qa-assets/compare-final.png` is the final combined review capture. The two viewport sizes have the same 16:9 composition to within one pixel after normalization.
+
+**Findings and corrections**
+
+- P1/P2 resolved: the former generic content cards were rebuilt into the three reference-specific structures. Objective now has four full-width pale rows, selected-row outline and one circular action; conversation has the reference's left/right/left message rhythm and wide bottom composer; practical has the reference's two-column workspace and wide bottom composer.
+- P2 resolved: the guide raster's bright green matte no longer leaks into green, violet or orange pages. The original local artwork is retained and chroma-keyed on a same-origin canvas, preserving its white strokes and transparent edge instead of approximating it with CSS or SVG.
+- P2 resolved: category backgrounds now have distinct center glow and deeper perimeter tones matched to each reference, while the central panel scale, corner radius, title/progress placement and lower action positions follow the shared reference geometry.
+- Remaining difference is P3 only: the references use abstract skeleton bars while the working prototype shows readable Chinese tasks and live controls. This is the intentional functional content layer; it does not change the reference's shell, density or interaction hierarchy.
+
+**Interaction verification**
+
+- Objective: choosing an answer sets the radio state and enables the circular submit control.
+- Conversation: entering a local test response adds the user bubble; the same circular control advances only after sending.
+- Practical: selecting a plan step or entering an instruction enables the Agent action.
+- Reduced-motion support remains in place, and the mobile layout keeps the full content in document flow.
+
+**Automated verification**
+
+- Theme tests cover all five stages plus category glow/deep tokens.
+- Component tests cover the real local guide asset, matte removal, chat rhythm and Agent work surface.
+- Production build, complete Node test suite and Sites packaging test pass in the final tree.
+
 final result: passed
 
 ## Latest revision: five-stage assessment map and task surfaces
