@@ -14,10 +14,10 @@ export function getCardStripBounds(height, cards, headingBottom) {
 }
 
 export function measureAssessmentBands(root) {
-  const cards = [...root.querySelectorAll(".assessment-card, .choose-card")].map((card) =>
+  const cards = [...root.querySelectorAll(".assessment-card, .choose-card, .profile-card")].map((card) =>
     card.getBoundingClientRect(),
   );
-  const heading = root.querySelector(".assessment-wordmark, .choose-wordmark");
+  const heading = root.querySelector(".assessment-wordmark, .choose-wordmark, .profile-wordmark");
   return getCardStripBounds(
     innerHeight,
     cards,

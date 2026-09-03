@@ -7,6 +7,7 @@ import "./cases.css";
 import "./assessment.css";
 import "./assessment-flow.css";
 import "./choose.css";
+import "./profile.css";
 import "./cube-turn.css";
 import "./login.css";
 

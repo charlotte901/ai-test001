@@ -4,7 +4,7 @@ import { SourceCrop } from "./AssessmentHub";
 import { TestWordmark } from "./TestWordmark";
 import { CHOICES, CHOOSE_ART, CHOOSE_WORDMARK, getChooseLayout } from "./choose-layout";
 
-export function ChooseHub({ onBack, onTest, busy }) {
+export function ChooseHub({ onBack, onTest, onProfile, busy }) {
   const [size, setSize] = useState(() => ({ width: innerWidth, height: innerHeight }));
   const [selected, setSelected] = useState(null);
   useEffect(() => {
@@ -26,9 +26,9 @@ export function ChooseHub({ onBack, onTest, busy }) {
           {CHOICES.map((item) => (
             <button key={item.id} className="choose-card"
               aria-label={`${item.title} · ${item.subtitle}`}
-              aria-pressed={item.id === "test" ? undefined : selected === item.id}
+              aria-pressed={item.id === "test" || item.id === "profile" ? undefined : selected === item.id}
               disabled={busy}
-              onClick={() => item.id === "test" ? onTest() : setSelected(item.id)}>
+              onClick={() => item.id === "test" ? onTest() : item.id === "profile" ? onProfile?.() : setSelected(item.id)}>
               <SourceCrop crop={item.crop} source={CHOOSE_ART} width={1822} height={863} />
               {selected === item.id && (
                 <span className="assessment-check">
@@ -39,8 +39,7 @@ export function ChooseHub({ onBack, onTest, busy }) {
           ))}
         </div>
         <p className="choose-selection" role="status">
-          {selected === "reports" ? "报告查询尚未开放，先从测试闯关开始吧。"
-            : selected === "profile" ? "个人中心尚未开放。" : ""}
+          {selected === "reports" ? "报告查询尚未开放，先从测试闯关开始吧。" : ""}
         </p>
       </div>
     </main>

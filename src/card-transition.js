@@ -36,7 +36,7 @@ export async function animateCards(host, outgoing, incoming, scrollY = 0, revers
     frozen.style.transform = kind === "out" ? `translateY(${-scrollY}px)` : "none";
     layer.append(frozen);
     host.append(layer);
-    const cards = [...frozen.querySelectorAll(".choose-card, .assessment-card")];
+    const cards = [...frozen.querySelectorAll(".choose-card, .assessment-card, .profile-card")];
     cards.forEach((card, index) => {
       const motion = getCardFlight(kind, index, cards.length, card.getBoundingClientRect(), viewport, reverse);
       card.dataset.flight = kind;
@@ -44,7 +44,7 @@ export async function animateCards(host, outgoing, incoming, scrollY = 0, revers
         ...motion.options, duration: motion.options.duration * speed, delay: motion.options.delay * speed,
       }));
     });
-    const heading = frozen.querySelector(".choose-wordmark, .assessment-wordmark");
+    const heading = frozen.querySelector(".choose-wordmark, .assessment-wordmark, .profile-wordmark");
     if (heading) {
       // Preserve the reference's optical x-alignment while the lettering changes.
       const base = getComputedStyle(heading).transform;

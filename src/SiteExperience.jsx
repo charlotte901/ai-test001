@@ -3,6 +3,7 @@ import { App } from "./App";
 import { AssessmentHub } from "./AssessmentHub";
 import { AssessmentMap, AssessmentTask } from "./AssessmentFlow";
 import { ChooseHub } from "./ChooseHub";
+import { ProfileHub } from "./ProfileHub";
 import { assessmentHash, getAssessmentRoute } from "./assessment-flow";
 import { animateCards } from "./card-transition";
 import {
@@ -18,6 +19,7 @@ const route = () => {
   if (assessment) return assessment.mode === "task" ? "assessment-task" : "assessment-map";
   if (location.hash === "#assessments") return "assessments";
   if (location.hash === "#choose") return "choose";
+  if (location.hash === "#profile") return "profile";
   return location.hash === "#login" ? "login" : "home";
 };
 
@@ -26,6 +28,7 @@ const PANEL = {
   login: "cube",
   choose: "choose",
   assessments: "assessments",
+  profile: "profile",
   "assessment-map": "assessment-flow",
   "assessment-task": "assessment-flow",
 };
@@ -76,6 +79,8 @@ export function SiteExperience() {
           ? "AIQUOS — AI 能力测评"
       : view === "choose"
         ? "AIQUOS — 选择你的下一步"
+        : view === "profile"
+          ? "AIQUOS — 个人中心"
         : view === "login"
           ? "AIQUOS — 登录"
           : "AIQUOS — 你的 AI 实力到哪一步？";
@@ -88,6 +93,8 @@ export function SiteExperience() {
           ? ".flow-wordmark"
         : view === "choose"
           ? ".choose-wordmark"
+          : view === "profile"
+            ? ".profile-wordmark"
           : view === "login"
             ? ".login-title"
             : ".home-brand";
@@ -180,7 +187,7 @@ export function SiteExperience() {
         ref={(node) => {
           panels.current.cube = node;
         }}
-        hidden={view === "choose" || view === "assessments" || view === "assessment-map" || view === "assessment-task"}
+        hidden={view === "choose" || view === "assessments" || view === "profile" || view === "assessment-map" || view === "assessment-task"}
       >
         {(cubeMounted || view === "home" || view === "login") && (
           <App
@@ -204,6 +211,7 @@ export function SiteExperience() {
         <ChooseHub
           onBack={() => go("home")}
           onTest={() => go("assessments")}
+          onProfile={() => go("profile")}
           busy={moving}
         />
       </div>
@@ -215,6 +223,15 @@ export function SiteExperience() {
         hidden={view !== "assessments"}
       >
         <AssessmentHub onBack={() => go("choose")} onStart={openAssessmentMap} busy={moving} />
+      </div>
+      <div
+        className="experience-panel"
+        ref={(node) => {
+          panels.current.profile = node;
+        }}
+        hidden={view !== "profile"}
+      >
+        <ProfileHub onBack={() => go("choose")} busy={moving} />
       </div>
       <div
         className="experience-panel"
