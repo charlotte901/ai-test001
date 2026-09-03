@@ -27,6 +27,21 @@ if (new URLSearchParams(location.search).has("showcase")) {
     if (event.data?.type === "aiquos:capture")
       captureRequest = { id: event.data.requestId, origin: event.origin };
   });
+  // A lost WebGL context leaves the canvas permanently black and no activation
+  // nudge can heal it. Allow the browser to restore it; if it does not come
+  // back promptly, reload — the parent keeps the outgoing frame until the
+  // fresh scene announces itself, and the periodic nudge re-activates it.
+  let contextLost = false;
+  document.addEventListener("webglcontextlost", (event) => {
+    event.preventDefault();
+    contextLost = true;
+    setTimeout(() => {
+      if (contextLost) location.reload();
+    }, 1500);
+  }, true);
+  document.addEventListener("webglcontextrestored", () => {
+    contextLost = false;
+  }, true);
   window.requestAnimationFrame = (callback) =>
     request((time) => {
       const last = window.__showcaseFrameTime || 0;
