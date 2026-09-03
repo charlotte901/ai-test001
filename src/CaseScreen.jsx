@@ -87,6 +87,22 @@ function CaseLayer({ config, visible, outgoing, active, onReady, onDispose }) {
     };
   }, [config.id, markReady, onDispose]);
   useEffect(syncPlayback, [active, syncPlayback, attempt]);
+  // Hidden-frame heals: a scene that came on-screen while its iframe was
+  // frozen or whose activation message was lost would otherwise stay on its
+  // stale warm-up frame (the conbini black screen). Re-assert the CURRENT
+  // activation state on a slow beat while this layer is the visible one —
+  // paused stays paused (login turn), active always repaints.
+  useEffect(() => {
+    if (!visible || config.kind === "video") return;
+    const nudge = () =>
+      media.current?.contentWindow?.postMessage(
+        { type: "aiquos:visibility", active: activeRef.current === true },
+        "*",
+      );
+    nudge();
+    const timer = setInterval(nudge, 1200);
+    return () => clearInterval(timer);
+  }, [visible, config.kind]);
   return (
     <div className={`case-layer ${visible ? "is-visible" : ""} ${outgoing ? "is-outgoing" : ""} ${ready ? "is-ready" : ""}`}
       data-layer-case={config.id} data-preloaded={!visible} data-ready={ready}

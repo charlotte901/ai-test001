@@ -189,11 +189,22 @@
 .task-action:not(:disabled):hover { transform: translateY(-3px); box-shadow: 0 11px 0 #00000012; }
 .task-action:disabled { color: #a6aeb7; background: #edf0f2; box-shadow: none; }
 .chat-thread { display: grid; gap: 18px; margin-top: 24px; max-width: 100%; }
-.chat-bubble { display: flex; align-items: flex-end; gap: 10px; }
+/* Avatars pin to the bubble's first line: while the reply streams in and the
+ * text grows downward, the avatar must never slide with it. */
+.chat-bubble { display: flex; align-items: flex-start; gap: 10px; }
 .chat-bubble.is-user { justify-content: flex-end; }
-.chat-bubble span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: #fff; background: var(--assessment-color); font-size: 11px; font-weight: 800; }
+.chat-bubble span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: #fff; background: var(--assessment-color); font-size: 11px; font-weight: 800; flex-shrink: 0; }
 .chat-bubble p { max-width: 61%; margin: 0; padding: 15px 18px; border-radius: 22px 22px 22px 5px; color: #475363; background: color-mix(in srgb, var(--assessment-soft) 76%, #fff); line-height: 1.5; font-size: 15px; }
-.chat-bubble.is-user p { order: -1; border-radius: 18px 18px 4px 18px; color: #fff; background: var(--assessment-color); }
+.chat-bubble.is-user p { order: -1; border-radius: 18px 18px 4px 18px; color: #1f2a3c; background: color-mix(in srgb, var(--assessment-color) 13%, #fff); border: 1px solid color-mix(in srgb, var(--assessment-color) 24%, #fff); }
+/* Markdown surfaces for streamed AI content. */
+.chat-bubble p strong { font-weight: 700; color: inherit; }
+.chat-bubble p em { font-style: italic; }
+.chat-bubble p code { padding: 1px 6px; border-radius: 6px; background: #ffffffb3; font-size: .92em; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.chat-bubble p .md-heading { margin: 0; font-weight: 700; font-size: 1.04em; }
+.chat-bubble p .md-quote { margin: 0; color: #5d6a7d; }
+.chat-bubble p ul, .chat-bubble p ol, .agent-output ul, .agent-output ol { margin: 6px 0 2px; padding-left: 20px; display: grid; gap: 3px; }
+.chat-bubble.is-streaming p > :last-child::after { content: "▍"; margin-left: 1px; color: var(--assessment-color); animation: md-caret 900ms steps(1) infinite; }
+@keyframes md-caret { 50% { opacity: 0; } }
 .conversation-task { min-height: 0; }
 .conversation-task h2 { font-size: clamp(27px, 2.45vw, 34px); letter-spacing: -.05em; }
 .conversation-task .chat-thread {
@@ -224,8 +235,8 @@
   font-weight: 500;
   line-height: 1.68;
 }
-.conversation-task .chat-bubble.is-user p { border-radius: 20px 20px 6px 20px; color: #fff; }
-.conversation-task .chat-bubble.is-feedback { align-items: flex-start; margin-top: 2px; }
+.conversation-task .chat-bubble.is-user p { border-radius: 20px 20px 6px 20px; color: #1f2a3c; background: color-mix(in srgb, var(--assessment-color) 13%, #fff); border: 1px solid color-mix(in srgb, var(--assessment-color) 24%, #fff); }
+.conversation-task .chat-bubble.is-feedback { margin-top: 2px; }
 .conversation-task .chat-bubble.is-feedback p {
   max-width: min(78%, 760px);
   padding: 19px 22px;
@@ -236,6 +247,22 @@
   line-height: 1.75;
 }
 .conversation-task .task-composer { height: 64px; margin-top: 14px; padding-left: 23px; }
+.conversation-done {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 12px 14px 12px 20px;
+  border-radius: 18px;
+  border: 1.5px dashed color-mix(in srgb, var(--assessment-color) 45%, #fff);
+  background: color-mix(in srgb, var(--assessment-soft) 55%, #fff);
+  animation: conversation-done-in 260ms ease-out both;
+}
+.conversation-done > span { color: color-mix(in srgb, var(--assessment-deep) 82%, #26324a); font-size: 14px; font-weight: 800; }
+.conversation-done .task-action { margin: 0; }
+@keyframes conversation-done-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .conversation-task .task-composer input { color: #202b3e; font-size: 17px; font-weight: 500; }
 .conversation-task .task-composer input::placeholder { color: #687489; opacity: 1; }
 .conversation-task .task-composer button { width: 52px; height: 52px; }
@@ -267,7 +294,11 @@
 .agent-canvas { display: flex; flex-direction: column; gap: 11px; color: color-mix(in srgb, var(--assessment-color) 44%, #fff); font-size: 13px; font-weight: 700; }
 .agent-empty { display: grid; flex: 1; place-content: center; justify-items: center; gap: 9px; min-height: 0; color: color-mix(in srgb, var(--assessment-color) 48%, #fff); text-align: center; line-height: 1.45; }
 .agent-empty svg { width: 26px; height: 26px; }
-.agent-output { margin: 0; overflow: auto; color: #3f4b59; white-space: pre-wrap; font-size: 13px; line-height: 1.58; font-weight: 600; }
+.agent-output { margin: 0; overflow: auto; color: #3f4b59; font-size: 13px; line-height: 1.62; font-weight: 600; display: grid; gap: 8px; align-content: start; }
+.agent-output strong { font-weight: 800; }
+.agent-output code { padding: 1px 6px; border-radius: 6px; background: #f1f3f6; font-size: .92em; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.agent-output .md-heading { margin: 0; font-weight: 800; font-size: 1.05em; }
+.agent-output .md-quote { margin: 0; color: #687382; }
 .agent-image { width: 100%; min-height: 0; flex: 1; object-fit: cover; border-radius: 14px; background: var(--assessment-soft); }
 .agent-error { margin: 7px 0 -2px; color: #d7462e; font-size: 12px; font-weight: 700; }
 .agent-composer { width: 100%; min-height: 62px; margin-top: 14px; padding-left: 20px; background: #fff; }
@@ -312,3 +343,5 @@
   .level-progress { top: 92px; right: 20px; }
   .level-map, .task-panel { margin-top: 74px; }
 }
+.thinking-hint { display: inline-flex; align-items: center; gap: 9px; color: #687382; font-size: .94em; font-weight: 600; }
+.thinking-hint .reply-spinner { width: 17px; height: 17px; color: var(--assessment-color); }

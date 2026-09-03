@@ -21,6 +21,7 @@ import {
   STAGE_LABELS,
 } from "./assessment-flow";
 import { generateArkImage, streamDeepSeek } from "./deepseek";
+import { MarkdownLite } from "./markdown-lite";
 
 const GUIDES = "/assets/assessment-guides-crop.png";
 
@@ -144,6 +145,9 @@ function ObjectiveTask({ stage, onComplete }) {
 function ConversationTask({ stage, onComplete }) {
   const [draft, setDraft] = useState("");
   const threadNode = useRef(null);
+  // Only auto-follow while the reader is already at the bottom, so looking
+  // back through earlier replies is never fought by the stream.
+  const follow = useRef(true);
   const [thread, setThread] = useState([
     { role: "assistant", content: "先说说你希望最终结果解决什么问题。" },
     { role: "user", content: "我希望目标更具体，也方便直接执行。", sample: true },
@@ -152,9 +156,22 @@ function ConversationTask({ stage, onComplete }) {
   const [isSending, setIsSending] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState("");
+  // Reasoning models think in silence before the first content token; label
+  // that gap so the wait never reads as a stuck request.
+  const [isThinking, setIsThinking] = useState(false);
+  const thinkingTimer = useRef(null);
+  useEffect(() => () => clearTimeout(thinkingTimer.current), []);
+  const beginThinkingLabel = () => {
+    clearTimeout(thinkingTimer.current);
+    thinkingTimer.current = setTimeout(() => setIsThinking(true), 2500);
+  };
+  const endThinkingLabel = () => {
+    clearTimeout(thinkingTimer.current);
+    setIsThinking(false);
+  };
   useEffect(() => {
     const node = threadNode.current;
-    if (node) node.scrollTop = node.scrollHeight;
+    if (node && follow.current) node.scrollTop = node.scrollHeight;
   }, [thread]);
   const send = async () => {
     if (isReady) {
@@ -163,19 +180,25 @@ function ConversationTask({ stage, onComplete }) {
     }
     const content = draft.trim();
     if (!content || isSending) return;
-    const nextThread = [...thread, { role: "user", content }, { role: "assistant", content: "", pending: true }];
+    const nextThread = [...thread, { role: "user", content }, { role: "assistant", content: "", pending: true, streaming: true }];
     setThread(nextThread);
     setDraft("");
     setError("");
     setIsSending(true);
+    beginThinkingLabel();
     try {
       await streamDeepSeek({
         messages: [
           { role: "system", content: "你是 AIQUOS 的测评向导。请用中文简洁回应用户，帮助其把 AI 协作需求说得更具体；指出一个做得好的点和一个可执行的改进建议。不要替用户直接完成测评任务。" },
           ...nextThread.filter((item) => !item.sample && !item.pending).map(({ role, content: message }) => ({ role, content: message })),
         ],
-        onDelta: (message) => setThread((items) => items.map((item, index) => index === items.length - 1 ? { role: "assistant", content: message } : item)),
+        onDelta: (message) => {
+          endThinkingLabel();
+          setThread((items) => items.map((item, index) => index === items.length - 1 ? { role: "assistant", content: message, streaming: true } : item));
+        },
       });
+      endThinkingLabel();
+      setThread((items) => items.map((item, index) => index === items.length - 1 ? { role: "assistant", content: item.content, streaming: false } : item));
       setIsReady(true);
     } catch (requestError) {
       setThread((items) => items.slice(0, -1));
@@ -186,11 +209,23 @@ function ConversationTask({ stage, onComplete }) {
   };
   return <div className="task-body conversation-task">
     <h2>和 AI 向导一起想清楚</h2>
-    <div ref={threadNode} className="chat-thread" aria-live="polite">
-      {thread.map((item, index) => <div key={`${item.role}-${index}`} className={`chat-bubble ${item.role === "user" ? "is-user" : "is-guide"}${item.role === "assistant" && !item.pending && isReady && index === thread.length - 1 ? " is-feedback" : ""}`}><span>{item.role === "user" ? "我" : "AI"}</span><p>{item.pending ? <CircleNotch className="reply-spinner" weight="bold" /> : item.content}</p></div>)}
+    <div
+      ref={threadNode}
+      className="chat-thread"
+      aria-live="polite"
+      onScroll={(event) => {
+        const node = event.currentTarget;
+        follow.current = node.scrollHeight - node.scrollTop - node.clientHeight < 90;
+      }}
+    >
+      {thread.map((item, index) => <div key={`${item.role}-${index}`} className={`chat-bubble ${item.role === "user" ? "is-user" : "is-guide"}${item.streaming ? " is-streaming" : ""}${item.role === "assistant" && !item.pending && isReady && index === thread.length - 1 ? " is-feedback" : ""}`}><span>{item.role === "user" ? "我" : "AI"}</span><p>{item.pending ? <span className="thinking-hint"><CircleNotch className="reply-spinner" weight="bold" />{isThinking ? "正在思考…" : ""}</span> : <MarkdownLite text={item.content} />}</p></div>)}
     </div>
     {error && <p className="agent-error" role="alert">{error}</p>}
-    <label className="task-composer"><span className="sr-only">输入你的回应</span><input disabled={isSending || isReady} value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => event.key === "Enter" && send()} placeholder={isReady ? "已获得 AI 反馈，点击箭头进入下一关" : "写下你的回应…"} /><button type="button" disabled={isSending} onClick={send} aria-label={isReady ? "进入下一关" : "发送回应"}>{isSending ? <CircleNotch className="reply-spinner" weight="bold" /> : isReady ? <ArrowRight weight="bold" /> : <PaperPlaneTilt weight="fill" />}</button></label>
+    {isReady && <div className="conversation-done">
+      <span>本轮反馈已完成</span>
+      <TaskAction onClick={onComplete} label="完成本关" />
+    </div>}
+    <label className="task-composer"><span className="sr-only">输入你的回应</span><input disabled={isSending || isReady} value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => event.key === "Enter" && send()} placeholder={isReady ? "本关已完成，点击「完成本关」继续" : "写下你的回应…"} /><button type="button" disabled={isSending} onClick={send} aria-label={isReady ? "进入下一关" : "发送回应"}>{isSending ? <CircleNotch className="reply-spinner" weight="bold" /> : isReady ? <ArrowRight weight="bold" /> : <PaperPlaneTilt weight="fill" />}</button></label>
   </div>;
 }
 
@@ -241,7 +276,7 @@ function PracticalTask({ stage, onComplete }) {
       </section>
       <section className="agent-canvas" aria-live="polite" aria-label="Agent 工作区域">
         <div className="agent-section-heading"><Sparkle weight="fill" /><span>AI 输出</span></div>
-        {isRunning && !output && !imageUrl ? <div className="agent-empty"><CircleNotch className="reply-spinner" weight="bold" /><span>{isImageTask ? "正在生成主视觉…" : "正在整理材料…"}</span></div> : imageUrl ? <img className="agent-image" src={imageUrl} alt={`${task.title}生成结果`} /> : output ? <p className="agent-output">{output}</p> : <div className="agent-empty"><Sparkle weight="fill" /><span>写好提示词后，Agent 将在这里完成交付。</span></div>}
+        {isRunning && !output && !imageUrl ? <div className="agent-empty"><CircleNotch className="reply-spinner" weight="bold" /><span>{isImageTask ? "正在生成主视觉…" : "正在整理材料…"}</span></div> : imageUrl ? <img className="agent-image" src={imageUrl} alt={`${task.title}生成结果`} /> : output ? <div className="agent-output"><MarkdownLite text={output} /></div> : <div className="agent-empty"><Sparkle weight="fill" /><span>写好提示词后，Agent 将在这里完成交付。</span></div>}
       </section>
     </div>
     {error && <p className="agent-error" role="alert">{error}</p>}

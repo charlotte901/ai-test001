@@ -34,7 +34,13 @@ if (new URLSearchParams(location.search).has("showcase")) {
         window.requestAnimationFrame(callback);
       else {
         window.__showcaseFrameTime = time;
-        callback(time);
+        // One scene exception must never kill the rAF chain: a dead loop is a
+        // frozen (often black) screen that no activation message can revive.
+        try {
+          callback(time);
+        } catch (error) {
+          console.error("showcase frame failed:", error);
+        }
         if (renderedFrames < 2 && document.querySelector("canvas")) {
           renderedFrames++;
           if (renderedFrames === 2) announceReady();
