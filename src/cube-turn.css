@@ -36,8 +36,10 @@
 .cube-shadow {
   opacity: var(--shell-opacity, 1);
 }
+/* The pan/scale into the flat panel follows --turn-p (see responsive.css):
+ * the same eased clock that rotates the WebGL shell, replacing a second
+ * parallel CSS transition that drifted against the rotation. */
 .cube-position {
-  transition: transform 900ms cubic-bezier(.333333, 1, .666667, 1);
   will-change: transform;
 }
 .home-hero-art,
@@ -46,9 +48,6 @@
 .case-carousel,
 .next-slide {
   transition: opacity 180ms ease, visibility 180ms;
-}
-.app.is-login-view .cube-position {
-  transform: translate(var(--flat-x), var(--flat-y)) scale(var(--flat-scale));
 }
 .app.is-login-view .home-hero-art,
 .app.is-login-view .intro-copy,

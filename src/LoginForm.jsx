@@ -15,6 +15,10 @@ export function LoginForm({ onLogin }) {
       aria-labelledby="login-title" aria-describedby="login-note"
       onSubmit={(event) => submitDemoLogin(event, onLogin)}>
       <header className="login-heading">
+        <span className="login-kicker" aria-hidden="true">
+          <span className="login-kicker-dot" />
+          AIQUOS · PLAYGROUND
+        </span>
         <h2 id="login-title" className="login-title" tabIndex={-1}>欢迎回来</h2>
         <p>登录，探索你的 AI 实力</p>
       </header>

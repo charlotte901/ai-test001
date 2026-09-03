@@ -122,7 +122,8 @@ export function App({ onLogin, onBack, onLoginComplete, loginView = false, activ
   const [preset, setPreset] = useState(0);
   const initialCaseIds = useRef(new Set(Object.values(getCaseFaces(0)).map((item) => item.id)));
   const [bootedCases, setBootedCases] = useState(() => new Set());
-  const nextFaces = useMemo(() => getCaseFaces(preset + 1), [preset]);
+  const upcomingFaces = useMemo(() => getCaseFaces(preset + 1), [preset]);
+  const [nextFaces, setNextFaces] = useState(upcomingFaces);
   const [playing, setPlaying] = useState(
     () => !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
@@ -152,6 +153,13 @@ export function App({ onLogin, onBack, onLoginComplete, loginView = false, activ
     document.addEventListener("visibilitychange", change);
     return () => document.removeEventListener("visibilitychange", change);
   }, []);
+  // Mounting the next group's hidden iframes (scene compile + init) lands on
+  // the main thread; defer it until the reveal/swap has fully settled.
+  useEffect(() => {
+    if (!casesReady) return;
+    const timer = setTimeout(() => setNextFaces(upcomingFaces), 900);
+    return () => clearTimeout(timer);
+  }, [casesReady, upcomingFaces]);
   useEffect(() => {
     if (
       !casesReady ||
@@ -245,31 +253,22 @@ export function App({ onLogin, onBack, onLoginComplete, loginView = false, activ
                 Home
               </a>
               <a
-                href="#features"
+                href="#cases"
                 onClick={(e) => {
                   e.preventDefault();
                   reset();
                 }}
               >
-                Features
+                Cases
               </a>
               <a
-                href="#about"
+                href="#forum"
                 onClick={(e) => {
                   e.preventDefault();
                   setModal("about");
                 }}
               >
-                About
-              </a>
-              <a
-                href="#pricing"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setModal("pricing");
-                }}
-              >
-                Pricing
+                Forum
               </a>
             </nav>
             <button

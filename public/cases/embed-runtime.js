@@ -12,8 +12,14 @@ if (new URLSearchParams(location.search).has("showcase")) {
   };
   window.addEventListener("message", (event) => {
     if (event.source !== parent) return;
-    if (event.data?.type === "aiquos:visibility")
+    if (event.data?.type === "aiquos:visibility") {
       active = event.data.active === true;
+      if (active) {
+        // Coming on-screen must always paint afresh: a scene warmed while
+        // hidden may hold stale (possibly black) warm-up frames.
+        window.__showcaseFrameTime = 0;
+      }
+    }
     if (event.data?.type === "aiquos:ready-ack") {
       readyAcknowledged = true;
       clearTimeout(readyRetry);

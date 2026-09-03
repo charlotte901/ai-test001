@@ -328,6 +328,10 @@ export function CubeDisplay({ faces, nextFaces, flattened = false, active = true
     const draw = (p) => {
       progress.current = p;
       node.dataset.rotation = p.toFixed(4);
+      // One eased clock drives the shell mesh, the screen planes AND the
+      // container pan/scale, so the whole move reads as a single gesture.
+      const app = node.closest(".app");
+      if (app) app.style.setProperty("--turn-p", p.toFixed(4));
       const shellBlend = Math.min(1, p / 0.055);
       node.style.setProperty("--shell-opacity", 1 - shellBlend);
       node.style.setProperty("--texture-opacity", shellBlend);
@@ -366,6 +370,15 @@ export function CubeDisplay({ faces, nextFaces, flattened = false, active = true
         onMotionChange?.(false);
       }
     };
+    if (!duration) {
+      // Zero-length moves land synchronously: reduced-motion users and
+      // webviews that withhold vsync still reach the exact final pose.
+      draw(to);
+      setSettled(flattened);
+      setTurning(false);
+      onMotionChange?.(false);
+      return () => {};
+    }
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [flattened, ready, onMotionChange]);

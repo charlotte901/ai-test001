@@ -63,7 +63,25 @@ body {
   top: 0;
   width: 1536px;
   height: 1024px;
-  transform: translate(var(--cube-x), var(--cube-y)) scale(var(--cube-scale));
+  /* --turn-p (the shell's eased rotation clock) walks the container from the
+   * home pose to the flat login pose, so pan/scale and rotation share one
+   * animation instead of two parallel transitions that drift apart. */
+  transform: translate(
+      calc(
+        var(--cube-x) + (var(--flat-x, var(--cube-x)) - var(--cube-x)) *
+          var(--turn-p, 0)
+      ),
+      calc(
+        var(--cube-y) + (var(--flat-y, var(--cube-y)) - var(--cube-y)) *
+          var(--turn-p, 0)
+      )
+    )
+    scale(
+      calc(
+        var(--cube-scale) +
+          (var(--flat-scale, 1) - var(--cube-scale)) * var(--turn-p, 0)
+      )
+    );
   transform-origin: top left;
 }
 .intro-copy {

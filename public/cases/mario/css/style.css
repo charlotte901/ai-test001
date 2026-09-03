@@ -38,6 +38,8 @@ html, body {
   height: 100vh;
   display: block;
   object-fit: cover;
+  /* Wide top-face crop: keep the ground playfield, let the sky take the cut. */
+  object-position: 50% 100%;
   box-shadow: none;
 }
 .showcase body { background: #5c94fc; }
